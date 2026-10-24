@@ -174,7 +174,7 @@ public class AuthController {
 <span class="fc" id="L174">        school = text(data, &quot;school&quot;, 1, 80),</span>
 <span class="fc" id="L175">        phone = phone(data);</span>
 <span class="fc" id="L176">    var previous = db.one(&quot;SELECT name,school FROM t_user WHERE id=?&quot;, id);</span>
-<span class="pc bpc" id="L177" title="2 of 4 branches missed.">    boolean changed = !name.equals(previous.get(&quot;name&quot;)) || !school.equals(previous.get(&quot;school&quot;));</span>
+<span class="pc bpc" id="L177" title="3 of 4 branches missed.">    boolean changed = !name.equals(previous.get(&quot;name&quot;)) || !school.equals(previous.get(&quot;school&quot;));</span>
 <span class="fc" id="L178">    db.update(</span>
         &quot;UPDATE t_user SET name=?,school=?,phone=?&quot;
 <span class="pc bpc" id="L180" title="1 of 2 branches missed.">            + (changed ? &quot;,certification='NONE',cert_file=NULL,cert_note=NULL&quot; : &quot;&quot;)</span>

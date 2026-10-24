@@ -4,6 +4,7 @@ skinparam defaultFontName Microsoft YaHei
 skinparam monochrome true
 skinparam shadowing false
 rectangle "Windows 本机" {
+ component "Navicat 数据库管理客户端" as Navicat
  component "浏览器中文界面\nHTML CSS JavaScript" as Browser
  component "Spring MVC 控制器\nAuth House Student Admin Upload" as Controllers
  component "访问拦截器 WebConfig\n会话 角色 版本 CSRF" as Guard
@@ -23,10 +24,11 @@ Controllers --> Service
 Controllers --> Store
 Service --> Store
 Store --> H2 : demo profile
-Store --> MySQL : mysql / mariadb profile
+Store --> MySQL : JDBC / 默认 mysql profile
+Navicat --> MySQL : 独立管理连接 / 3306
 Controllers --> Files : 图片读写
 note bottom of MySQL
-本次交付保留连接配置
-按用户要求暂缓远程联调
+192.168.93.128:3306/kali
+连接无响应，按要求暂缓远程联调
 end note
 @enduml

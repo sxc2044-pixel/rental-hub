@@ -47,6 +47,7 @@ public class Bootstrap implements CommandLineRunner {
           encoder.encode(UUID.randomUUID().toString()),
           "平台管理员");
     }
+    if (demo) refreshSeedLabels();
     if (!demo || db.count("SELECT COUNT(*) FROM t_house") > 0) return;
     long admin =
         ((Number) db.one("SELECT id FROM t_user WHERE role='ADMIN' ORDER BY id LIMIT 1").get("id"))
@@ -61,7 +62,7 @@ public class Bootstrap implements CommandLineRunner {
               "2023100513",
               encoder.encode("Student123!"),
               encoder.encode("demo-recovery-2026"),
-              "演示同学",
+              "田浩东",
               "暨南大学",
               "13800138001");
     else student = Store.id(students.getFirst());
@@ -90,18 +91,18 @@ public class Bootstrap implements CommandLineRunner {
                   + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)",
               titles[i],
               regions[i],
-              regions[i] + "大学路" + (i + 1) + "号（演示地址）",
+              regions[i] + "大学路" + (i + 1) + "号（示例地址）",
               rents[i],
               areas[i],
               layouts[i],
               "空调 / 热水器 / 洗衣机 / 宽带 / 独立卫浴",
-              "采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为课程演示数据，插图非房屋实拍，实际租赁前请核验房源。",
+              "采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为示例房源，配图仅供参考，实际租赁前请核验房源。",
               "/images/room-" + (i % 6 + 1) + ".svg",
               "示例房东",
               "13800138000",
               i == 9 ? "PENDING" : "PUBLISHED",
               i == 9 ? null : admin,
-              "课程演示数据已标注");
+              "示例房源已标注");
       ids.add(id);
     }
     db.update("INSERT INTO t_favorite(user_id,house_id) VALUES (?,?)", student, ids.getFirst());
@@ -124,9 +125,20 @@ public class Bootstrap implements CommandLineRunner {
     db.update(
         "INSERT INTO t_notice(title,content,publisher_id) VALUES (?,?,?)",
         "欢迎使用校园安居",
-        "房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。当前房源为课程演示数据。",
+        "房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。示例房源信息仅供参考，请以实地核验为准。",
         admin);
-    db.audit(admin, "DEMO_SEED", "SYSTEM", 1, "初始化课程演示数据");
+    db.audit(admin, "DEMO_SEED", "SYSTEM", 1, "初始化示例数据");
+  }
+
+  private void refreshSeedLabels() {
+    db.update("UPDATE t_house SET description=? WHERE description=?",
+        "采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为示例房源，配图仅供参考，实际租赁前请核验房源。",
+        "采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为课程演示数据，插图非房屋实拍，实际租赁前请核验房源。");
+    db.update("UPDATE t_house SET review_note=? WHERE review_note=?", "示例房源已标注", "课程演示数据已标注");
+    db.update("UPDATE t_notice SET content=? WHERE title=? AND content=?",
+        "房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。示例房源信息仅供参考，请以实地核验为准。",
+        "欢迎使用校园安居", "房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。当前房源为课程演示数据。");
+    db.update("UPDATE t_audit SET detail=? WHERE action='DEMO_SEED' AND detail=?", "初始化示例数据", "初始化课程演示数据");
   }
 
   private void ensureIndex(String table, String index, String columns) throws SQLException {

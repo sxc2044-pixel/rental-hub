@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.*;
 import org.springframework.test.web.servlet.*;
 
+@org.springframework.test.context.ActiveProfiles("demo")
 @SpringBootTest(
     properties = {
       "spring.datasource.url=jdbc:h2:mem:rentaltest;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE",

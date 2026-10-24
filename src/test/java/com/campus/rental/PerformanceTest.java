@@ -16,6 +16,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /** 独立内存库，避免将10万条压测数据写入演示或远程数据库。 */
+@org.springframework.test.context.ActiveProfiles("demo")
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {

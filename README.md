@@ -1,17 +1,17 @@
 # 校园安居 租房信息管理系统
 
-基于随附需求规格说明书实现的Java 21课程项目，覆盖学生与管理员两类角色、FR-01至FR-17。本机运行Web应用，默认使用H2文件数据库；可切换至Kali的MySQL或MariaDB。业务代码为本项目原创实现，未复制第三方租房项目。
+基于随附需求规格说明书实现的Java 21课程项目，覆盖学生与管理员两类角色、FR-01至FR-17。Web应用在Windows本机运行，默认通过JDBC连接Kali的MySQL数据库。Navicat仅用于管理同一数据库，不需要启动单独的本机MySQL。H2保留为显式选择的离线验证模式。业务代码为本项目原创实现，未复制第三方租房项目。
 
 ## 快速运行
 
-确保安装JDK 21，双击 **启动演示.cmd**。启动成功后访问 [校园安居](http://127.0.0.1:8080)。随交付包提供 `dist/rental-hub-1.0.0.jar`，无需重新下载依赖即可运行。
+确保安装JDK 21，双击 **启动项目.cmd**。本机私有连接配置已经填写；分享包首次启动会创建并打开 `config/application-local.properties`，填写数据库密码后重新启动。目标为 `192.168.93.128:3306/kali`，用户名 `root`。启动成功后访问 [校园安居](http://127.0.0.1:8080)。随交付包提供 `dist/rental-hub-1.0.0.jar`，无需重新下载依赖即可运行。
 
 | 角色 | 演示账号 | 演示密码 |
 | --- | --- | --- |
 | 学生 | 2023100513 | Student123! |
 | 管理员 | admin | Admin123! |
 
-演示验证码为本机应用生成的简单加法题。注册创建学生账号，并只展示一次密码恢复密钥，请自行保存。演示学生恢复密钥为 `demo-recovery-2026`。以上账号仅用于课程演示。
+演示验证码为本机应用生成的简单加法题。注册创建学生账号，并只展示一次密码恢复密钥，请自行保存。演示学生恢复密钥为 `demo-recovery-2026`。以上账号在 `SEED_DEMO=true` 且首次初始化时创建，不会显示在成品网站上。已有数据库不会覆盖房源或重建账号。
 
 从源码运行：
 
@@ -20,9 +20,9 @@ mvn -B -ntp verify
 java -Dfile.encoding=UTF-8 -jar target/rental-hub-1.0.0.jar
 ```
 
-也可运行 `./scripts/start.ps1 -Profile demo`。PowerShell脚本若受本机执行策略限制，可使用CMD启动脚本或直接运行Java命令，无需更改全局系统策略。
+也可运行 `./scripts/start.ps1`，默认加载本机私有远程连接配置。Kali暂时不可用时，可显式双击 **启动演示.cmd** 或运行 `./scripts/start.ps1 -Profile demo`，使用独立H2文件库验证页面；常规启动不会自动回退数据库。PowerShell脚本若受本机执行策略限制，可使用CMD启动脚本或直接运行Java命令，无需更改全局系统策略。
 
-默认监听127.0.0.1:8080，按Ctrl+C停止。端口占用时设置 `PORT=8081` 后使用Java启动，或运行 `./scripts/start.ps1 -Profile demo -Port 8081`。数据库和上传文件位于项目 `data`，日志位于 `logs`；再次启动保留已有数据，不重复覆盖示例房源。
+默认监听127.0.0.1:8080，按Ctrl+C停止。端口占用时设置 `PORT=8081` 后使用Java启动，或运行 `./scripts/start.ps1 -Profile demo -Port 8081`。MySQL业务数据保存在Kali，上传文件位于Windows项目 `data/uploads`，日志位于 `logs`；H2模式的数据库位于 `data`。再次启动保留已有数据，不重复覆盖示例房源。
 
 ## 功能
 
@@ -50,9 +50,9 @@ dist                           本机可直接运行的JAR
 
 ## Kali数据库
 
-目标配置是 `192.168.93.128:3306/kali`。实际连接未收到数据库响应，按用户要求暂缓联调。MySQL运行与性能尚未验收，不用H2结果替代。完整步骤见 [Kali部署与备份](docs/Kali部署与备份.md)。
+目标配置是 `192.168.93.128:3306/kali`。本次再次只读检查仍未收到数据库响应，按用户要求暂缓联调；连接失败时常规启动会报错退出，不会改用其他数据库。MySQL运行与性能尚未验收，不用H2结果替代。完整步骤见 [Kali部署与备份](docs/Kali部署与备份.md)。
 
-复制 `config/local.example.ps1` 为 `config/local.ps1`，设置DB_HOST、DB_PORT、DB_NAME、DB_USER、DB_PASSWORD，执行 `./scripts/start.ps1 -Profile local`。本机已填写的私有local配置不进入Git或可分享压缩包。`SEED_DEMO=false` 时不创建固定学生和示例房源；首次无管理员时通过 `ADMIN_PASSWORD` 设置密码。Kali实际使用MariaDB时改用mariadb profile。
+CMD及直接Java启动读取 `config/application-local.properties`；可复制同目录 `.example.properties` 填写。PowerShell入口读取 `config/local.ps1`，可从 `local.example.ps1` 复制填写，执行 `./scripts/start.ps1 -Profile local`。环境变量优先于properties；使用其中一种入口即可，修改连接时同步维护实际使用的配置。本机已填写的私有local配置不进入Git或可分享压缩包。`SEED_DEMO=false` 时不创建固定学生和示例房源；首次无管理员时通过 `ADMIN_PASSWORD` 设置密码。Kali实际使用MariaDB时改用mariadb profile。
 
 SQL初始化不删除现有表，不负责迁移不兼容的历史结构，连接前应确认目标库内没有其他系统的同名 `t_` 表。推荐创建仅Windows主机可访问的项目专用账号。
 

@@ -1,0 +1,6 @@
+2026-10-24
+Read-only JDBC check: 192.168.93.128:3306/kali, user root
+SQLState=08S01; Communications link failure; no packets received.
+Repeated outside sandbox with the same result.
+Default application profile verified as mysql; startup fails on connection error, without H2 fallback.
+No remote tables or data modified.

@@ -4,6 +4,8 @@
 /config/local.ps1
 /config/application-local.properties
 *.log
+*.dump
+*.dumpstream
 .idea/
 *.iml
 /.tools/

@@ -47,25 +47,26 @@ public class Bootstrap implements CommandLineRunner {
 <span class="fc" id="L47">          encoder.encode(UUID.randomUUID().toString()),</span>
           &quot;平台管理员&quot;);
     }
-<span class="pc bpc" id="L50" title="2 of 4 branches missed.">    if (!demo || db.count(&quot;SELECT COUNT(*) FROM t_house&quot;) &gt; 0) return;</span>
-<span class="fc" id="L51">    long admin =</span>
-<span class="fc" id="L52">        ((Number) db.one(&quot;SELECT id FROM t_user WHERE role='ADMIN' ORDER BY id LIMIT 1&quot;).get(&quot;id&quot;))</span>
-<span class="fc" id="L53">            .longValue();</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">    if (demo) refreshSeedLabels();</span>
+<span class="pc bpc" id="L51" title="2 of 4 branches missed.">    if (!demo || db.count(&quot;SELECT COUNT(*) FROM t_house&quot;) &gt; 0) return;</span>
+<span class="fc" id="L52">    long admin =</span>
+<span class="fc" id="L53">        ((Number) db.one(&quot;SELECT id FROM t_user WHERE role='ADMIN' ORDER BY id LIMIT 1&quot;).get(&quot;id&quot;))</span>
+<span class="fc" id="L54">            .longValue();</span>
     long student;
-<span class="fc" id="L55">    var students = db.list(&quot;SELECT id FROM t_user WHERE account='2023100513'&quot;);</span>
-<span class="pc bpc" id="L56" title="1 of 2 branches missed.">    if (students.isEmpty())</span>
-<span class="fc" id="L57">      student =</span>
-<span class="fc" id="L58">          db.insert(</span>
+<span class="fc" id="L56">    var students = db.list(&quot;SELECT id FROM t_user WHERE account='2023100513'&quot;);</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">    if (students.isEmpty())</span>
+<span class="fc" id="L58">      student =</span>
+<span class="fc" id="L59">          db.insert(</span>
               &quot;INSERT INTO t_user(account,password_hash,recovery_hash,name,school,phone) VALUES&quot;
                   + &quot; (?,?,?,?,?,?)&quot;,
               &quot;2023100513&quot;,
-<span class="fc" id="L62">              encoder.encode(&quot;Student123!&quot;),</span>
-<span class="fc" id="L63">              encoder.encode(&quot;demo-recovery-2026&quot;),</span>
-              &quot;演示同学&quot;,
+<span class="fc" id="L63">              encoder.encode(&quot;Student123!&quot;),</span>
+<span class="fc" id="L64">              encoder.encode(&quot;demo-recovery-2026&quot;),</span>
+              &quot;田浩东&quot;,
               &quot;暨南大学&quot;,
               &quot;13800138001&quot;);
-<span class="nc" id="L67">    else student = Store.id(students.getFirst());</span>
-<span class="fc" id="L68">    String[] titles = {</span>
+<span class="nc" id="L68">    else student = Store.id(students.getFirst());</span>
+<span class="fc" id="L69">    String[] titles = {</span>
       &quot;暨大旁的阳光一居&quot;,
       &quot;江畔清爽两居室&quot;,
       &quot;大学城静谧书香单间&quot;,
@@ -77,68 +78,79 @@ public class Bootstrap implements CommandLineRunner {
       &quot;城市天际线景观房&quot;,
       &quot;待审核的房源示例&quot;
     };
-<span class="fc" id="L80">    String[] regions = {&quot;天河区&quot;, &quot;海珠区&quot;, &quot;番禺区&quot;, &quot;天河区&quot;, &quot;番禺区&quot;, &quot;越秀区&quot;, &quot;天河区&quot;, &quot;番禺区&quot;, &quot;海珠区&quot;, &quot;天河区&quot;};</span>
-<span class="fc" id="L81">    String[] layouts = {&quot;一室一厅&quot;, &quot;两室一厅&quot;, &quot;单间&quot;, &quot;一室一厅&quot;, &quot;三室两厅&quot;, &quot;一室一厅&quot;, &quot;单间&quot;, &quot;两室一厅&quot;, &quot;两室一厅&quot;, &quot;单间&quot;};</span>
-<span class="fc" id="L82">    int[] rents = {1800, 2600, 980, 2200, 3600, 1650, 1200, 2400, 3200, 1500},</span>
-<span class="fc" id="L83">        areas = {42, 68, 22, 38, 98, 35, 26, 62, 76, 28};</span>
-<span class="fc" id="L84">    List&lt;Long&gt; ids = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">    for (int i = 0; i &lt; titles.length; i++) {</span>
-<span class="fc" id="L86">      long id =</span>
-<span class="fc" id="L87">          db.insert(</span>
+<span class="fc" id="L81">    String[] regions = {&quot;天河区&quot;, &quot;海珠区&quot;, &quot;番禺区&quot;, &quot;天河区&quot;, &quot;番禺区&quot;, &quot;越秀区&quot;, &quot;天河区&quot;, &quot;番禺区&quot;, &quot;海珠区&quot;, &quot;天河区&quot;};</span>
+<span class="fc" id="L82">    String[] layouts = {&quot;一室一厅&quot;, &quot;两室一厅&quot;, &quot;单间&quot;, &quot;一室一厅&quot;, &quot;三室两厅&quot;, &quot;一室一厅&quot;, &quot;单间&quot;, &quot;两室一厅&quot;, &quot;两室一厅&quot;, &quot;单间&quot;};</span>
+<span class="fc" id="L83">    int[] rents = {1800, 2600, 980, 2200, 3600, 1650, 1200, 2400, 3200, 1500},</span>
+<span class="fc" id="L84">        areas = {42, 68, 22, 38, 98, 35, 26, 62, 76, 28};</span>
+<span class="fc" id="L85">    List&lt;Long&gt; ids = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">    for (int i = 0; i &lt; titles.length; i++) {</span>
+<span class="fc" id="L87">      long id =</span>
+<span class="fc" id="L88">          db.insert(</span>
               &quot;INSERT INTO&quot;
                   + &quot; t_house(title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone,status,reviewer_id,reviewed_at,review_note)&quot;
                   + &quot; VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)&quot;,
               titles[i],
               regions[i],
-              regions[i] + &quot;大学路&quot; + (i + 1) + &quot;号（演示地址）&quot;,
-<span class="fc" id="L94">              rents[i],</span>
-<span class="fc" id="L95">              areas[i],</span>
+              regions[i] + &quot;大学路&quot; + (i + 1) + &quot;号（示例地址）&quot;,
+<span class="fc" id="L95">              rents[i],</span>
+<span class="fc" id="L96">              areas[i],</span>
               layouts[i],
               &quot;空调 / 热水器 / 洗衣机 / 宽带 / 独立卫浴&quot;,
-              &quot;采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为课程演示数据，插图非房屋实拍，实际租赁前请核验房源。&quot;,
+              &quot;采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为示例房源，配图仅供参考，实际租赁前请核验房源。&quot;,
               &quot;/images/room-&quot; + (i % 6 + 1) + &quot;.svg&quot;,
               &quot;示例房东&quot;,
               &quot;13800138000&quot;,
-<span class="fc bfc" id="L102" title="All 2 branches covered.">              i == 9 ? &quot;PENDING&quot; : &quot;PUBLISHED&quot;,</span>
-<span class="fc bfc" id="L103" title="All 2 branches covered.">              i == 9 ? null : admin,</span>
-              &quot;课程演示数据已标注&quot;);
-<span class="fc" id="L105">      ids.add(id);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">              i == 9 ? &quot;PENDING&quot; : &quot;PUBLISHED&quot;,</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">              i == 9 ? null : admin,</span>
+              &quot;示例房源已标注&quot;);
+<span class="fc" id="L106">      ids.add(id);</span>
     }
-<span class="fc" id="L107">    db.update(&quot;INSERT INTO t_favorite(user_id,house_id) VALUES (?,?)&quot;, student, ids.getFirst());</span>
-<span class="fc" id="L108">    db.update(</span>
+<span class="fc" id="L108">    db.update(&quot;INSERT INTO t_favorite(user_id,house_id) VALUES (?,?)&quot;, student, ids.getFirst());</span>
+<span class="fc" id="L109">    db.update(</span>
         &quot;INSERT INTO t_reservation(user_id,house_id,visit_time,phone,status,active_slot) VALUES&quot;
             + &quot; (?,?,?,?,'COMPLETED',?)&quot;,
-<span class="fc" id="L111">        student,</span>
-<span class="fc" id="L112">        ids.get(1),</span>
-<span class="fc" id="L113">        LocalDateTime.now().minusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0),</span>
+<span class="fc" id="L112">        student,</span>
+<span class="fc" id="L113">        ids.get(1),</span>
+<span class="fc" id="L114">        LocalDateTime.now().minusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0),</span>
         &quot;13800138001&quot;,
         &quot;demo-completed-slot&quot;);
-<span class="fc" id="L116">    db.update(</span>
+<span class="fc" id="L117">    db.update(</span>
         &quot;INSERT INTO t_message(user_id,house_id,content,reply,replied_by,replied_at) VALUES&quot;
             + &quot; (?,?,?,?,?,CURRENT_TIMESTAMP)&quot;,
-<span class="fc" id="L119">        student,</span>
-<span class="fc" id="L120">        ids.getFirst(),</span>
+<span class="fc" id="L120">        student,</span>
+<span class="fc" id="L121">        ids.getFirst(),</span>
         &quot;请问可以预约周末看房吗？&quot;,
         &quot;可以，请在房源详情中选择未来30天内的整点时段。&quot;,
-<span class="fc" id="L123">        admin);</span>
-<span class="fc" id="L124">    db.update(</span>
+<span class="fc" id="L124">        admin);</span>
+<span class="fc" id="L125">    db.update(</span>
         &quot;INSERT INTO t_notice(title,content,publisher_id) VALUES (?,?,?)&quot;,
         &quot;欢迎使用校园安居&quot;,
-        &quot;房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。当前房源为课程演示数据。&quot;,
-<span class="fc" id="L128">        admin);</span>
-<span class="fc" id="L129">    db.audit(admin, &quot;DEMO_SEED&quot;, &quot;SYSTEM&quot;, 1, &quot;初始化课程演示数据&quot;);</span>
-<span class="fc" id="L130">  }</span>
+        &quot;房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。示例房源信息仅供参考，请以实地核验为准。&quot;,
+<span class="fc" id="L129">        admin);</span>
+<span class="fc" id="L130">    db.audit(admin, &quot;DEMO_SEED&quot;, &quot;SYSTEM&quot;, 1, &quot;初始化示例数据&quot;);</span>
+<span class="fc" id="L131">  }</span>
+
+  private void refreshSeedLabels() {
+<span class="fc" id="L134">    db.update(&quot;UPDATE t_house SET description=? WHERE description=?&quot;,</span>
+        &quot;采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为示例房源，配图仅供参考，实际租赁前请核验房源。&quot;,
+        &quot;采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为课程演示数据，插图非房屋实拍，实际租赁前请核验房源。&quot;);
+<span class="fc" id="L137">    db.update(&quot;UPDATE t_house SET review_note=? WHERE review_note=?&quot;, &quot;示例房源已标注&quot;, &quot;课程演示数据已标注&quot;);</span>
+<span class="fc" id="L138">    db.update(&quot;UPDATE t_notice SET content=? WHERE title=? AND content=?&quot;,</span>
+        &quot;房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。示例房源信息仅供参考，请以实地核验为准。&quot;,
+        &quot;欢迎使用校园安居&quot;, &quot;房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。当前房源为课程演示数据。&quot;);
+<span class="fc" id="L141">    db.update(&quot;UPDATE t_audit SET detail=? WHERE action='DEMO_SEED' AND detail=?&quot;, &quot;初始化示例数据&quot;, &quot;初始化课程演示数据&quot;);</span>
+<span class="fc" id="L142">  }</span>
 
   private void ensureIndex(String table, String index, String columns) throws SQLException {
-<span class="fc" id="L133">    boolean found = false;</span>
-<span class="fc" id="L134">    try (var connection = db.dataSource().getConnection();</span>
-<span class="fc" id="L135">        var rows =</span>
+<span class="fc" id="L145">    boolean found = false;</span>
+<span class="fc" id="L146">    try (var connection = db.dataSource().getConnection();</span>
+<span class="fc" id="L147">        var rows =</span>
             connection
-<span class="fc" id="L137">                .getMetaData()</span>
-<span class="fc" id="L138">                .getIndexInfo(connection.getCatalog(), null, table, false, false)) {</span>
-<span class="pc bpc" id="L139" title="1 of 4 branches missed.">      while (rows.next()) if (index.equalsIgnoreCase(rows.getString(&quot;INDEX_NAME&quot;))) found = true;</span>
+<span class="fc" id="L149">                .getMetaData()</span>
+<span class="fc" id="L150">                .getIndexInfo(connection.getCatalog(), null, table, false, false)) {</span>
+<span class="pc bpc" id="L151" title="1 of 4 branches missed.">      while (rows.next()) if (index.equalsIgnoreCase(rows.getString(&quot;INDEX_NAME&quot;))) found = true;</span>
     }
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">    if (!found) db.update(&quot;CREATE INDEX &quot; + index + &quot; ON &quot; + table + &quot;(&quot; + columns + &quot;)&quot;);</span>
-<span class="fc" id="L142">  }</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">    if (!found) db.update(&quot;CREATE INDEX &quot; + index + &quot; ON &quot; + table + &quot;(&quot; + columns + &quot;)&quot;);</span>
+<span class="fc" id="L154">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

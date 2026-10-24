@@ -1,18 +1,20 @@
 # Kali 数据库连接和备份
 
-本机程序默认使用 H2 文件数据库演示。远程连接参数已保存在本机 `config/local.ps1`，该文件不进入Git或可分享源码压缩包。本次按用户指示暂缓Kali联调，因此以下是部署步骤，不能作为已通过远程验收的证据。
+Windows本机运行Java网站，默认通过JDBC连接Kali的MySQL：192.168.93.128:3306/kali，用户名root。本机Navicat是独立数据库管理客户端，不是数据库服务；它与Java分别连接同一个Kali数据库。CMD/Java入口读取私有 `config/application-local.properties`，PowerShell入口读取私有 `config/local.ps1`，两份本机配置均已填写，且不进入Git或可分享压缩包。本次按用户指示暂缓Kali联调，因此以下是部署步骤，不能作为已通过远程验收的证据。
 
 ## 切换远程数据库
 
 1. Kali数据库名为 `kali`，地址为 `192.168.93.128:3306`。确认与Windows处于可互访的虚拟网段。Kali常见默认数据库为MariaDB，应用同时提供mysql和mariadb配置，应以数据库实际产品为准。
 2. Kali执行 `sudo systemctl status mysql` 或 `sudo systemctl status mariadb`，再执行 `sudo ss -lntp | grep 3306` 查看是否监听虚拟网卡IP。若只监听127.0.0.1，按实际MySQL/MariaDB配置文件设置 `bind-address` 为虚拟网卡地址并重启数据库服务。
 3. 以管理员身份执行 `docs/数据库部署.sql`。推荐项目专用用户，仅允许Windows主机IP访问，不要在公网开放root账号。
-4. 在项目目录复制 `config/local.example.ps1` 为 `config/local.ps1` 并填写数据库密码。MySQL使用 `SPRING_PROFILES_ACTIVE=mysql`，MariaDB使用 `mariadb`。首次无管理员账号时设置 `ADMIN_PASSWORD`。需要课程示例数据时，将 `SEED_DEMO` 设为true。
+4. 双击 `启动项目.cmd`。分享包首次运行会由 `config/application-local.example.properties` 创建私有配置并打开记事本，填写密码后重新启动。若使用PowerShell，则复制 `config/local.example.ps1` 为 `config/local.ps1` 并填写数据库密码。MySQL使用 `SPRING_PROFILES_ACTIVE=mysql`，MariaDB使用 `mariadb`。首次无管理员账号时设置 `ADMIN_PASSWORD`。需要示例数据时，将 `SEED_DEMO` 设为true。
 5. 执行 `./scripts/start.ps1 -Profile local`。浏览器访问 `http://127.0.0.1:8080`。服务和界面在Windows运行，只有数据库位于虚拟机。
 
 数据库表通过 `schema.sql` 创建，索引由 `Bootstrap` 通过元数据检查后创建。不要将项目直接连接至已有不兼容的同名表。数据表升级应先备份并编写明确的迁移SQL。
 
-## 本机演示备份与恢复
+## 独立H2验证模式的备份与恢复
+
+Kali不可连接时，显式运行 `启动演示.cmd` 或 `scripts/start.ps1 -Profile demo`。此时数据保存在本机H2库，不会同步到Kali。常规MySQL启动不会自动回退到H2。
 
 程序运行期间每天北京时间02:00自动备份H2数据库和上传图片。也可在管理员的“操作审计”页面点击“备份本机数据”。文件位于 `data/backups/rental-backup-时间.zip`，内含在线一致性数据库快照 `database.zip` 与 `uploads`。备份可能包含认证材料，应保存在受控目录。
 
