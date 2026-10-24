@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "case": "existing real website reused without another Java process",
+      "result": "PASS"
+    },
+    {
+      "case": "unrelated occupied port rejected; other service preserved",
+      "result": "PASS"
+    },
+    {
+      "case": "free port proceeds to Java with selected profile and dist JAR (stubbed Java)",
+      "result": "PASS"
+    },
+    {
+      "case": "concurrent launch waits for startup and reuses website",
+      "result": "PASS"
+    }
+  ],
+  "passed": 4,
+  "databaseChanged": false,
+  "existingServiceStopped": false
+}
