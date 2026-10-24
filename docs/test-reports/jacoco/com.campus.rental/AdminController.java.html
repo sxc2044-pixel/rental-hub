@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">校园安居</a> &gt; <a href="index.source.html" class="el_package">com.campus.rental</a> &gt; <span class="el_source">AdminController.java</span></div><h1>AdminController.java</h1><pre class="source lang-java linenums">package com.campus.rental;
+
+import static com.campus.rental.Rules.*;
+
+import jakarta.servlet.http.HttpSession;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api/admin&quot;)
+public class AdminController {
+  private final Store db;
+  private final ReservationService reservations;
+
+<span class="fc" id="L18">  public AdminController(Store db, ReservationService reservations) {</span>
+<span class="fc" id="L19">    this.db = db;</span>
+<span class="fc" id="L20">    this.reservations = reservations;</span>
+<span class="fc" id="L21">  }</span>
+
+  @GetMapping(&quot;/houses&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; houses(@RequestParam(defaultValue = &quot;&quot;) String status) {
+<span class="nc bnc" id="L25" title="All 2 branches missed.">    return status.isBlank()</span>
+<span class="nc" id="L26">        ? db.list(&quot;SELECT * FROM t_house ORDER BY id DESC LIMIT 1000&quot;)</span>
+<span class="nc" id="L27">        : db.list(&quot;SELECT * FROM t_house WHERE status=? ORDER BY id DESC LIMIT 1000&quot;, status);</span>
+  }
+
+  private Object[] houseFields(Map&lt;String, Object&gt; d) {
+<span class="fc" id="L31">    String region = text(d, &quot;region&quot;, 1, 40), layout = text(d, &quot;layout&quot;, 1, 40);</span>
+<span class="fc" id="L32">    require(</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        db.count(&quot;SELECT COUNT(*) FROM t_dictionary WHERE category='REGION' AND label=?&quot;, region)</span>
+            &gt; 0,
+        &quot;请选择有效区域&quot;);
+<span class="fc" id="L36">    require(</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        db.count(&quot;SELECT COUNT(*) FROM t_dictionary WHERE category='LAYOUT' AND label=?&quot;, layout)</span>
+            &gt; 0,
+        &quot;请选择有效户型&quot;);
+<span class="fc" id="L40">    String image = text(d, &quot;image&quot;, 1, 100);</span>
+<span class="fc" id="L41">    require(</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">        image.matches(&quot;/images/room-[1-6]\\.svg&quot;)</span>
+<span class="pc bnc" id="L43" title="All 2 branches missed.">            || image.matches(&quot;/api/media/[0-9a-f-]{36}\\.(png|jpg)&quot;),</span>
+        &quot;请选择房源插图或已上传的图片&quot;);
+<span class="fc" id="L45">    return new Object[] {</span>
+<span class="fc" id="L46">      text(d, &quot;title&quot;, 2, 100),</span>
+      region,
+<span class="fc" id="L48">      text(d, &quot;address&quot;, 2, 160),</span>
+<span class="fc" id="L49">      decimal(d, &quot;rent&quot;, new BigDecimal(&quot;999999.99&quot;)),</span>
+<span class="fc" id="L50">      decimal(d, &quot;area&quot;, new BigDecimal(&quot;9999.99&quot;)),</span>
+      layout,
+<span class="fc" id="L52">      text(d, &quot;facilities&quot;, 1, 255),</span>
+<span class="fc" id="L53">      text(d, &quot;description&quot;, 1, 2000),</span>
+      image,
+<span class="fc" id="L55">      text(d, &quot;owner_name&quot;, 1, 40),</span>
+<span class="fc" id="L56">      phone(Map.of(&quot;phone&quot;, d.getOrDefault(&quot;owner_phone&quot;, &quot;&quot;)))</span>
+    };
+  }
+
+  @PostMapping(&quot;/houses&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; createHouse(@RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L63">    long id =</span>
+<span class="fc" id="L64">        db.insert(</span>
+            &quot;INSERT INTO&quot;
+                + &quot; t_house(title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone)&quot;
+                + &quot; VALUES (?,?,?,?,?,?,?,?,?,?,?)&quot;,
+<span class="fc" id="L68">            houseFields(d));</span>
+<span class="fc" id="L69">    db.audit(WebConfig.uid(s), &quot;HOUSE_CREATE&quot;, &quot;HOUSE&quot;, id, &quot;代理录入，等待审核&quot;);</span>
+<span class="fc" id="L70">    return Map.of(&quot;id&quot;, id, &quot;message&quot;, &quot;房源已保存，等待审核&quot;);</span>
+  }
+
+  @PutMapping(&quot;/houses/{id}&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; editHouse(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L77">    db.one(&quot;SELECT id FROM t_house WHERE id=? AND status&lt;&gt;'DELETED' FOR UPDATE&quot;, id);</span>
+<span class="fc" id="L78">    var args = new ArrayList&lt;&gt;(Arrays.asList(houseFields(d)));</span>
+<span class="fc" id="L79">    args.add(id);</span>
+<span class="fc" id="L80">    db.update(</span>
+        &quot;UPDATE t_house SET&quot;
+            + &quot; title=?,region=?,address=?,rent=?,area=?,layout=?,facilities=?,description=?,image=?,owner_name=?,owner_phone=?,status='PENDING',reviewer_id=NULL,reviewed_at=NULL,review_note=NULL&quot;
+            + &quot; WHERE id=?&quot;,
+<span class="fc" id="L84">        args.toArray());</span>
+<span class="fc" id="L85">    db.audit(WebConfig.uid(s), &quot;HOUSE_EDIT&quot;, &quot;HOUSE&quot;, id, &quot;房源变更后重新审核&quot;);</span>
+<span class="fc" id="L86">    return Map.of(&quot;message&quot;, &quot;修改已保存，已重新进入审核&quot;);</span>
+  }
+
+  @PutMapping(&quot;/houses/{id}/review&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; reviewHouse(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L93">    var h = db.one(&quot;SELECT status FROM t_house WHERE id=? FOR UPDATE&quot;, id);</span>
+<span class="fc" id="L94">    require(&quot;PENDING&quot;.equals(h.get(&quot;status&quot;)), &quot;只能审核待审房源&quot;);</span>
+<span class="fc" id="L95">    String verdict = text(d, &quot;status&quot;, 1, 16), note = text(d, &quot;note&quot;, 1, 255);</span>
+<span class="fc" id="L96">    require(Set.of(&quot;PUBLISHED&quot;, &quot;REJECTED&quot;).contains(verdict), &quot;审核结论无效&quot;);</span>
+<span class="fc" id="L97">    db.update(</span>
+        &quot;UPDATE t_house SET status=?,review_note=?,reviewer_id=?,reviewed_at=CURRENT_TIMESTAMP&quot;
+            + &quot; WHERE id=?&quot;,
+        verdict,
+        note,
+<span class="fc" id="L102">        WebConfig.uid(s),</span>
+<span class="fc" id="L103">        id);</span>
+<span class="fc" id="L104">    db.audit(WebConfig.uid(s), &quot;HOUSE_REVIEW_&quot; + verdict, &quot;HOUSE&quot;, id, note);</span>
+<span class="fc" id="L105">    return Map.of(&quot;message&quot;, &quot;审核结果已保存&quot;);</span>
+  }
+
+  @PutMapping(&quot;/houses/{id}/status&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; houseStatus(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L112">    var h = db.one(&quot;SELECT status,reviewer_id FROM t_house WHERE id=? FOR UPDATE&quot;, id);</span>
+<span class="fc" id="L113">    String target = text(d, &quot;status&quot;, 1, 16), current = h.get(&quot;status&quot;).toString();</span>
+<span class="fc" id="L114">    require(</span>
+<span class="pc bpc" id="L115" title="1 of 4 branches missed.">        (current.equals(&quot;PUBLISHED&quot;) &amp;&amp; target.equals(&quot;OFFLINE&quot;))</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">            || (current.equals(&quot;OFFLINE&quot;)</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">                &amp;&amp; target.equals(&quot;PUBLISHED&quot;)</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                &amp;&amp; h.get(&quot;reviewer_id&quot;) != null),</span>
+        &quot;房源状态不允许此操作&quot;);
+<span class="fc" id="L120">    db.update(&quot;UPDATE t_house SET status=? WHERE id=?&quot;, target, id);</span>
+<span class="fc" id="L121">    db.audit(WebConfig.uid(s), &quot;HOUSE_&quot; + target, &quot;HOUSE&quot;, id, &quot;变更展示状态&quot;);</span>
+<span class="fc" id="L122">    return Map.of(&quot;message&quot;, &quot;状态已更新&quot;);</span>
+  }
+
+  @DeleteMapping(&quot;/houses/{id}&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; deleteHouse(@PathVariable long id, HttpSession s) {
+<span class="fc" id="L128">    db.one(&quot;SELECT id FROM t_house WHERE id=? AND status&lt;&gt;'DELETED' FOR UPDATE&quot;, id);</span>
+<span class="fc" id="L129">    require(</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        db.count(</span>
+                &quot;SELECT COUNT(*) FROM t_reservation WHERE house_id=? AND status IN&quot;
+                    + &quot; ('PENDING','CONFIRMED')&quot;,
+<span class="fc" id="L133">                id)</span>
+            == 0,
+        &quot;仍有进行中的预约，请先处理&quot;);
+<span class="fc" id="L136">    require(</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        db.count(</span>
+                &quot;SELECT COUNT(*) FROM t_contract WHERE house_id=? AND status IN&quot;
+                    + &quot; ('INTENT','SIGNED')&quot;,
+<span class="fc" id="L140">                id)</span>
+            == 0,
+        &quot;仍有有效合同记录，不能删除&quot;);
+<span class="fc" id="L143">    db.update(&quot;UPDATE t_house SET status='DELETED' WHERE id=?&quot;, id);</span>
+<span class="fc" id="L144">    db.audit(WebConfig.uid(s), &quot;HOUSE_DELETE&quot;, &quot;HOUSE&quot;, id, &quot;逻辑删除，保留业务关联&quot;);</span>
+<span class="fc" id="L145">    return Map.of(&quot;message&quot;, &quot;已删除，历史记录保留&quot;);</span>
+  }
+
+  @GetMapping(&quot;/users&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; users() {
+<span class="fc" id="L150">    return db.list(</span>
+        &quot;SELECT&quot;
+            + &quot; id,account,name,role,school,phone,certification,cert_file,cert_note,enabled,created_at&quot;
+            + &quot; FROM t_user ORDER BY id DESC LIMIT 1000&quot;);
+  }
+
+  @PutMapping(&quot;/users/{id}/enabled&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; enabled(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="nc" id="L160">    var u = db.one(&quot;SELECT role FROM t_user WHERE id=?&quot;, id);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">    require(!&quot;ADMIN&quot;.equals(u.get(&quot;role&quot;)), &quot;不能禁用管理员&quot;);</span>
+<span class="nc" id="L162">    require(d.get(&quot;enabled&quot;) instanceof Boolean, &quot;状态参数无效&quot;);</span>
+<span class="nc" id="L163">    boolean enabled = Boolean.TRUE.equals(d.get(&quot;enabled&quot;));</span>
+<span class="nc" id="L164">    db.update(</span>
+<span class="nc" id="L165">        &quot;UPDATE t_user SET enabled=?,session_version=session_version+1 WHERE id=?&quot;, enabled, id);</span>
+<span class="nc" id="L166">    db.audit(</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        WebConfig.uid(s), enabled ? &quot;USER_ENABLE&quot; : &quot;USER_DISABLE&quot;, &quot;USER&quot;, id, &quot;账号状态变更，旧会话失效&quot;);</span>
+<span class="nc" id="L168">    return Map.of(&quot;message&quot;, &quot;账号状态已更新&quot;);</span>
+  }
+
+  @PutMapping(&quot;/users/{id}/certification&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; certify(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L175">    var u = db.one(&quot;SELECT certification,cert_file FROM t_user WHERE id=? FOR UPDATE&quot;, id);</span>
+<span class="pc bpc" id="L176" title="2 of 4 branches missed.">    require(&quot;PENDING&quot;.equals(u.get(&quot;certification&quot;)) &amp;&amp; u.get(&quot;cert_file&quot;) != null, &quot;用户尚未提交待审材料&quot;);</span>
+<span class="fc" id="L177">    String result = text(d, &quot;status&quot;, 1, 16), note = text(d, &quot;note&quot;, 1, 255);</span>
+<span class="fc" id="L178">    require(Set.of(&quot;APPROVED&quot;, &quot;REJECTED&quot;).contains(result), &quot;审核状态无效&quot;);</span>
+<span class="fc" id="L179">    db.update(&quot;UPDATE t_user SET certification=?,cert_note=? WHERE id=?&quot;, result, note, id);</span>
+<span class="fc" id="L180">    db.audit(WebConfig.uid(s), &quot;CERT_&quot; + result, &quot;USER&quot;, id, note);</span>
+<span class="fc" id="L181">    return Map.of(&quot;message&quot;, &quot;认证审核已完成&quot;);</span>
+  }
+
+  @GetMapping(&quot;/reservations&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; reservations(@RequestParam(defaultValue = &quot;&quot;) String status) {
+<span class="nc" id="L186">    String sql =</span>
+        &quot;SELECT r.*,h.title,u.name FROM t_reservation r JOIN t_house h ON r.house_id=h.id JOIN&quot;
+            + &quot; t_user u ON r.user_id=u.id&quot;;
+<span class="nc bnc" id="L189" title="All 2 branches missed.">    return status.isBlank()</span>
+<span class="nc" id="L190">        ? db.list(sql + &quot; ORDER BY r.id DESC LIMIT 1000&quot;)</span>
+<span class="nc" id="L191">        : db.list(sql + &quot; WHERE r.status=? ORDER BY r.id DESC LIMIT 1000&quot;, status);</span>
+  }
+
+  @PutMapping(&quot;/reservations/{id}/status&quot;)
+  public Map&lt;String, Object&gt; reservationStatus(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L197">    reservations.transition(WebConfig.uid(s), id, text(d, &quot;status&quot;, 1, 16), true);</span>
+<span class="fc" id="L198">    return Map.of(&quot;message&quot;, &quot;预约状态已更新&quot;);</span>
+  }
+
+  @GetMapping(&quot;/messages&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; messages() {
+<span class="nc" id="L203">    return db.list(</span>
+        &quot;SELECT m.*,h.title,u.name FROM t_message m JOIN t_house h ON m.house_id=h.id JOIN t_user u&quot;
+            + &quot; ON m.user_id=u.id ORDER BY m.id DESC LIMIT 1000&quot;);
+  }
+
+  @PutMapping(&quot;/messages/{id}/reply&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; reply(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L212">    db.one(&quot;SELECT id FROM t_message WHERE id=?&quot;, id);</span>
+<span class="fc" id="L213">    db.update(</span>
+        &quot;UPDATE t_message SET reply=?,replied_by=?,replied_at=CURRENT_TIMESTAMP WHERE id=?&quot;,
+<span class="fc" id="L215">        text(d, &quot;reply&quot;, 1, 1000),</span>
+<span class="fc" id="L216">        WebConfig.uid(s),</span>
+<span class="fc" id="L217">        id);</span>
+<span class="fc" id="L218">    db.audit(WebConfig.uid(s), &quot;MESSAGE_REPLY&quot;, &quot;MESSAGE&quot;, id, &quot;回复咨询&quot;);</span>
+<span class="fc" id="L219">    return Map.of(&quot;message&quot;, &quot;回复已保存&quot;);</span>
+  }
+
+  @GetMapping(&quot;/comments&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; comments() {
+<span class="nc" id="L224">    return db.list(</span>
+        &quot;SELECT c.*,h.title,u.name FROM t_comment c JOIN t_house h ON c.house_id=h.id JOIN t_user u&quot;
+            + &quot; ON c.user_id=u.id ORDER BY c.id DESC LIMIT 1000&quot;);
+  }
+
+  @PutMapping(&quot;/comments/{id}/review&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; commentReview(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L233">    var c = db.one(&quot;SELECT status FROM t_comment WHERE id=? FOR UPDATE&quot;, id);</span>
+<span class="fc" id="L234">    require(&quot;PENDING&quot;.equals(c.get(&quot;status&quot;)), &quot;仅可审核待审评价&quot;);</span>
+<span class="fc" id="L235">    String target = text(d, &quot;status&quot;, 1, 16), note = text(d, &quot;note&quot;, 1, 255);</span>
+<span class="fc" id="L236">    require(Set.of(&quot;APPROVED&quot;, &quot;REJECTED&quot;).contains(target), &quot;审核结论无效&quot;);</span>
+<span class="fc" id="L237">    db.update(&quot;UPDATE t_comment SET status=?,review_note=? WHERE id=?&quot;, target, note, id);</span>
+<span class="fc" id="L238">    db.audit(WebConfig.uid(s), &quot;COMMENT_&quot; + target, &quot;COMMENT&quot;, id, note);</span>
+<span class="fc" id="L239">    return Map.of(&quot;message&quot;, &quot;评价审核已完成&quot;);</span>
+  }
+
+  @GetMapping(&quot;/contracts&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; contracts() {
+<span class="nc" id="L244">    return db.list(</span>
+        &quot;SELECT c.*,h.title,u.name FROM t_contract c JOIN t_house h ON c.house_id=h.id JOIN t_user&quot;
+            + &quot; u ON c.user_id=u.id ORDER BY c.id DESC LIMIT 1000&quot;);
+  }
+
+  @PutMapping(&quot;/contracts/{id}/status&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; contractStatus(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L253">    var c = db.one(&quot;SELECT * FROM t_contract WHERE id=? FOR UPDATE&quot;, id);</span>
+<span class="fc" id="L254">    String current = c.get(&quot;status&quot;).toString(), target = text(d, &quot;status&quot;, 1, 16);</span>
+<span class="fc" id="L255">    require(</span>
+<span class="pc bpc" id="L256" title="1 of 4 branches missed.">        (current.equals(&quot;INTENT&quot;) &amp;&amp; Set.of(&quot;SIGNED&quot;, &quot;CANCELLED&quot;).contains(target))</span>
+<span class="pc bpc" id="L257" title="2 of 4 branches missed.">            || (current.equals(&quot;SIGNED&quot;) &amp;&amp; target.equals(&quot;TERMINATED&quot;)),</span>
+        &quot;合同状态转换不允许&quot;);
+<span class="fc bfc" id="L259" title="All 2 branches covered.">    if (target.equals(&quot;SIGNED&quot;)) {</span>
+<span class="fc" id="L260">      long house = ((Number) c.get(&quot;house_id&quot;)).longValue();</span>
+<span class="fc" id="L261">      db.one(&quot;SELECT id FROM t_house WHERE id=? FOR UPDATE&quot;, house);</span>
+<span class="fc" id="L262">      require(</span>
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">          db.count(</span>
+                  &quot;SELECT COUNT(*) FROM t_contract WHERE house_id=? AND status='SIGNED' AND&quot;
+                      + &quot; start_date&lt;? AND end_date&gt;?&quot;,
+<span class="fc" id="L266">                  house,</span>
+<span class="fc" id="L267">                  c.get(&quot;end_date&quot;),</span>
+<span class="fc" id="L268">                  c.get(&quot;start_date&quot;))</span>
+              == 0,
+          &quot;该租期已有签约，不能重复出租&quot;);
+    }
+<span class="fc" id="L272">    db.update(</span>
+        &quot;UPDATE t_contract SET status=?,signed_at=&quot;
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            + (target.equals(&quot;SIGNED&quot;) ? &quot;CURRENT_TIMESTAMP&quot; : &quot;signed_at&quot;)</span>
+            + &quot; WHERE id=?&quot;,
+        target,
+<span class="fc" id="L277">        id);</span>
+<span class="fc" id="L278">    db.audit(WebConfig.uid(s), &quot;CONTRACT_&quot; + target, &quot;CONTRACT&quot;, id, &quot;线下核验后记录签约状态&quot;);</span>
+<span class="fc" id="L279">    return Map.of(&quot;message&quot;, &quot;合同状态已更新&quot;);</span>
+  }
+
+  @PostMapping(&quot;/notices&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; notice(@RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L285">    long id =</span>
+<span class="fc" id="L286">        db.insert(</span>
+            &quot;INSERT INTO t_notice(title,content,publisher_id) VALUES (?,?,?)&quot;,
+<span class="fc" id="L288">            text(d, &quot;title&quot;, 2, 100),</span>
+<span class="fc" id="L289">            text(d, &quot;content&quot;, 1, 2000),</span>
+<span class="fc" id="L290">            WebConfig.uid(s));</span>
+<span class="fc" id="L291">    db.audit(WebConfig.uid(s), &quot;NOTICE_CREATE&quot;, &quot;NOTICE&quot;, id, &quot;发布公告&quot;);</span>
+<span class="fc" id="L292">    return Map.of(&quot;message&quot;, &quot;公告已发布&quot;, &quot;id&quot;, id);</span>
+  }
+
+  @PutMapping(&quot;/notices/{id}&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; editNotice(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L299">    db.one(&quot;SELECT id FROM t_notice WHERE id=?&quot;, id);</span>
+<span class="fc" id="L300">    db.update(</span>
+        &quot;UPDATE t_notice SET title=?,content=? WHERE id=?&quot;,
+<span class="fc" id="L302">        text(d, &quot;title&quot;, 2, 100),</span>
+<span class="fc" id="L303">        text(d, &quot;content&quot;, 1, 2000),</span>
+<span class="fc" id="L304">        id);</span>
+<span class="fc" id="L305">    db.audit(WebConfig.uid(s), &quot;NOTICE_EDIT&quot;, &quot;NOTICE&quot;, id, &quot;修改公告&quot;);</span>
+<span class="fc" id="L306">    return Map.of(&quot;message&quot;, &quot;公告已修改&quot;);</span>
+  }
+
+  @DeleteMapping(&quot;/notices/{id}&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; deleteNotice(@PathVariable long id, HttpSession s) {
+<span class="fc" id="L312">    db.update(&quot;DELETE FROM t_notice WHERE id=?&quot;, id);</span>
+<span class="fc" id="L313">    db.audit(WebConfig.uid(s), &quot;NOTICE_DELETE&quot;, &quot;NOTICE&quot;, id, &quot;删除公告&quot;);</span>
+<span class="fc" id="L314">    return Map.of(&quot;message&quot;, &quot;公告已删除&quot;);</span>
+  }
+
+  @PostMapping(&quot;/dictionaries&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; dictionary(@RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="fc" id="L320">    String category = text(d, &quot;category&quot;, 1, 16), label = text(d, &quot;label&quot;, 1, 40);</span>
+<span class="fc" id="L321">    require(Set.of(&quot;REGION&quot;, &quot;LAYOUT&quot;, &quot;RENT&quot;).contains(category), &quot;字典类别无效&quot;);</span>
+<span class="fc" id="L322">    BigDecimal min = null, max = null;</span>
+<span class="pc bpc" id="L323" title="1 of 2 branches missed.">    if (category.equals(&quot;RENT&quot;)) {</span>
+<span class="nc" id="L324">      min = new BigDecimal(String.valueOf(d.get(&quot;min_value&quot;)));</span>
+<span class="nc" id="L325">      max = new BigDecimal(String.valueOf(d.get(&quot;max_value&quot;)));</span>
+<span class="nc" id="L326">      require(</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">          min.signum() &gt;= 0</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">              &amp;&amp; max.compareTo(min) &gt; 0</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">              &amp;&amp; max.compareTo(new BigDecimal(&quot;999999.99&quot;)) &lt;= 0</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">              &amp;&amp; min.scale() &lt;= 2</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">              &amp;&amp; max.scale() &lt;= 2,</span>
+          &quot;租金区间无效&quot;);
+    }
+<span class="fc" id="L334">    long id =</span>
+<span class="fc" id="L335">        db.insert(</span>
+            &quot;INSERT INTO t_dictionary(category,label,min_value,max_value) VALUES (?,?,?,?)&quot;,
+            category,
+            label,
+            min,
+            max);
+<span class="fc" id="L341">    db.audit(WebConfig.uid(s), &quot;DICTIONARY_CREATE&quot;, &quot;DICTIONARY&quot;, id, category + &quot;:&quot; + label);</span>
+<span class="fc" id="L342">    return Map.of(&quot;message&quot;, &quot;字典已新增&quot;, &quot;id&quot;, id);</span>
+  }
+
+  @DeleteMapping(&quot;/dictionaries/{id}&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; deleteDictionary(@PathVariable long id, HttpSession s) {
+<span class="fc" id="L348">    var d = db.one(&quot;SELECT * FROM t_dictionary WHERE id=? FOR UPDATE&quot;, id);</span>
+<span class="fc" id="L349">    String category = d.get(&quot;category&quot;).toString();</span>
+<span class="pc bpc" id="L350" title="1 of 2 branches missed.">    if (!category.equals(&quot;RENT&quot;)) {</span>
+<span class="pc bpc" id="L351" title="1 of 2 branches missed.">      String col = category.equals(&quot;REGION&quot;) ? &quot;region&quot; : &quot;layout&quot;;</span>
+<span class="fc" id="L352">      require(</span>
+<span class="fc bfc" id="L353" title="All 2 branches covered.">          db.count(</span>
+                  &quot;SELECT COUNT(*) FROM t_house WHERE &quot; + col + &quot;=? AND status&lt;&gt;'DELETED'&quot;,
+<span class="fc" id="L355">                  d.get(&quot;label&quot;))</span>
+              == 0,
+          &quot;字典已被房源引用，不能删除&quot;);
+    }
+<span class="fc" id="L359">    db.update(&quot;DELETE FROM t_dictionary WHERE id=?&quot;, id);</span>
+<span class="fc" id="L360">    db.audit(WebConfig.uid(s), &quot;DICTIONARY_DELETE&quot;, &quot;DICTIONARY&quot;, id, &quot;删除未引用条目&quot;);</span>
+<span class="fc" id="L361">    return Map.of(&quot;message&quot;, &quot;字典已删除&quot;);</span>
+  }
+
+  @PutMapping(&quot;/dictionaries/{id}&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; editDictionary(
+      @PathVariable long id, @RequestBody Map&lt;String, Object&gt; d, HttpSession s) {
+<span class="nc" id="L368">    var old = db.one(&quot;SELECT * FROM t_dictionary WHERE id=? FOR UPDATE&quot;, id);</span>
+<span class="nc" id="L369">    String category = old.get(&quot;category&quot;).toString(), label = text(d, &quot;label&quot;, 1, 40);</span>
+<span class="nc" id="L370">    BigDecimal min = null, max = null;</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">    if (category.equals(&quot;RENT&quot;)) {</span>
+<span class="nc" id="L372">      min = new BigDecimal(String.valueOf(d.get(&quot;min_value&quot;)));</span>
+<span class="nc" id="L373">      max = new BigDecimal(String.valueOf(d.get(&quot;max_value&quot;)));</span>
+<span class="nc" id="L374">      require(</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">          min.signum() &gt;= 0</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">              &amp;&amp; max.compareTo(min) &gt; 0</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">              &amp;&amp; max.compareTo(new BigDecimal(&quot;999999.99&quot;)) &lt;= 0</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">              &amp;&amp; min.scale() &lt;= 2</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">              &amp;&amp; max.scale() &lt;= 2,</span>
+          &quot;租金区间无效&quot;);
+    }
+<span class="nc" id="L382">    db.update(</span>
+<span class="nc" id="L383">        &quot;UPDATE t_dictionary SET label=?,min_value=?,max_value=? WHERE id=?&quot;, label, min, max, id);</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">    if (!category.equals(&quot;RENT&quot;)) {</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">      String col = category.equals(&quot;REGION&quot;) ? &quot;region&quot; : &quot;layout&quot;;</span>
+<span class="nc" id="L386">      db.update(&quot;UPDATE t_house SET &quot; + col + &quot;=? WHERE &quot; + col + &quot;=?&quot;, label, old.get(&quot;label&quot;));</span>
+    }
+<span class="nc" id="L388">    db.audit(WebConfig.uid(s), &quot;DICTIONARY_EDIT&quot;, &quot;DICTIONARY&quot;, id, &quot;修改条目并同步房源引用&quot;);</span>
+<span class="nc" id="L389">    return Map.of(&quot;message&quot;, &quot;字典与引用已同步更新&quot;);</span>
+  }
+
+  @GetMapping(&quot;/audit&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; audit() {
+<span class="fc" id="L394">    return db.list(</span>
+        &quot;SELECT a.*,u.name AS actor FROM t_audit a LEFT JOIN t_user u ON a.actor_id=u.id ORDER BY&quot;
+            + &quot; a.id DESC LIMIT 200&quot;);
+  }
+
+  @GetMapping(&quot;/stats&quot;)
+  public Map&lt;String, Object&gt; stats(
+      @RequestParam(defaultValue = &quot;&quot;) String region,
+      @RequestParam(defaultValue = &quot;&quot;) String layout,
+      @RequestParam(defaultValue = &quot;&quot;) String from,
+      @RequestParam(defaultValue = &quot;&quot;) String to) {
+<span class="pc bpc" id="L405" title="2 of 4 branches missed.">    require(region.length() &lt;= 40 &amp;&amp; layout.length() &lt;= 40, &quot;统计条件过长&quot;);</span>
+<span class="fc bfc" id="L406" title="All 2 branches covered.">    LocalDate start = from.isBlank() ? LocalDate.of(2000, 1, 1) : LocalDate.parse(from),</span>
+<span class="fc bfc" id="L407" title="All 2 branches covered.">        end = to.isBlank() ? LocalDate.now() : LocalDate.parse(to);</span>
+<span class="fc bfc" id="L408" title="All 2 branches covered.">    require(!start.isAfter(end), &quot;开始日期不能晚于结束日期&quot;);</span>
+<span class="fc" id="L409">    String filter = &quot; AND h.status&lt;&gt;'DELETED' AND (?='' OR h.region=?) AND (?='' OR h.layout=?)&quot;;</span>
+<span class="fc" id="L410">    Object[] a = {</span>
+<span class="fc" id="L411">      region, region, layout, layout, start.atStartOfDay(), end.plusDays(1).atStartOfDay()</span>
+    };
+<span class="fc" id="L413">    long houses =</span>
+<span class="fc" id="L414">        db.count(</span>
+            &quot;SELECT COUNT(*) FROM t_house h WHERE 1=1&quot;
+                + filter
+                + &quot; AND h.created_at&gt;=? AND h.created_at&lt;?&quot;,
+            a);
+<span class="fc" id="L419">    long users =</span>
+<span class="fc" id="L420">        db.count(</span>
+            &quot;SELECT COUNT(*) FROM t_user WHERE role='STUDENT' AND created_at&gt;=? AND created_at&lt;?&quot;,
+            a[4],
+            a[5]);
+<span class="fc" id="L424">    long reserves =</span>
+<span class="fc" id="L425">        db.count(</span>
+            &quot;SELECT COUNT(*) FROM t_reservation r JOIN t_house h ON r.house_id=h.id WHERE 1=1&quot;
+                + filter
+                + &quot; AND r.created_at&gt;=? AND r.created_at&lt;?&quot;,
+            a);
+<span class="fc" id="L430">    long contracts =</span>
+<span class="fc" id="L431">        db.count(</span>
+            &quot;SELECT COUNT(*) FROM t_contract c JOIN t_house h ON c.house_id=h.id WHERE&quot;
+                + &quot; c.status='SIGNED'&quot;
+                + filter
+                + &quot; AND c.signed_at&gt;=? AND c.signed_at&lt;?&quot;,
+            a);
+<span class="fc" id="L437">    var distribution =</span>
+<span class="fc" id="L438">        db.list(</span>
+            &quot;SELECT h.region,COUNT(*) AS total FROM t_house h WHERE 1=1&quot;
+                + filter
+                + &quot; AND h.created_at&gt;=? AND h.created_at&lt;? GROUP BY h.region ORDER BY total DESC&quot;,
+            a);
+<span class="fc" id="L443">    var trend =</span>
+<span class="fc" id="L444">        db.list(</span>
+            &quot;SELECT CAST(r.created_at AS DATE) AS visit_day,COUNT(*) AS total FROM t_reservation r&quot;
+                + &quot; JOIN t_house h ON r.house_id=h.id WHERE 1=1&quot;
+                + filter
+                + &quot; AND r.created_at&gt;=? AND r.created_at&lt;? GROUP BY CAST(r.created_at AS DATE)&quot;
+                + &quot; ORDER BY visit_day&quot;,
+            a);
+<span class="fc" id="L451">    return Map.of(</span>
+        &quot;houses&quot;,
+<span class="fc" id="L453">        houses,</span>
+        &quot;users&quot;,
+<span class="fc" id="L455">        users,</span>
+        &quot;reservations&quot;,
+<span class="fc" id="L457">        reserves,</span>
+        &quot;contracts&quot;,
+<span class="fc" id="L459">        contracts,</span>
+        &quot;distribution&quot;,
+        distribution,
+        &quot;trend&quot;,
+        trend,
+        &quot;scope&quot;,
+        &quot;房源按创建时间，预约包含全部状态，签约按签约时间；学生数仅按注册日期统计，不受区域或户型筛选影响。逻辑删除房源不计入关联统计。&quot;);
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,11 @@
+{
+  "output": "C:\\Users\\31042\\Desktop\\软件工程\\交付成果\\软件工程-实验报告汇总版.docx",
+  "experiments": 10,
+  "testCount": 64,
+  "lineCoverage": "84.42%",
+  "branchCoverage": "58.09%",
+  "sourceSha256": "3c36d525bf5b3877e10da05d114f09f3df275c7bd841fd2c95c0395401d648b4",
+  "sections": 2,
+  "pages": 41,
+  "renderEngine": "Microsoft Word + bundled Poppler"
+}

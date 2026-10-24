@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HouseController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">校园安居</a> &gt; <a href="index.source.html" class="el_package">com.campus.rental</a> &gt; <span class="el_source">HouseController.java</span></div><h1>HouseController.java</h1><pre class="source lang-java linenums">package com.campus.rental;
+
+import static com.campus.rental.Rules.*;
+
+import jakarta.servlet.http.HttpSession;
+import java.math.BigDecimal;
+import java.util.*;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api&quot;)
+public class HouseController {
+  private final Store db;
+
+<span class="fc" id="L15">  public HouseController(Store db) {</span>
+<span class="fc" id="L16">    this.db = db;</span>
+<span class="fc" id="L17">  }</span>
+
+  @GetMapping(&quot;/houses&quot;)
+  public Map&lt;String, Object&gt; houses(
+      @RequestParam(defaultValue = &quot;&quot;) String keyword,
+      @RequestParam(defaultValue = &quot;&quot;) String region,
+      @RequestParam(defaultValue = &quot;&quot;) String layout,
+      @RequestParam(required = false) BigDecimal minRent,
+      @RequestParam(required = false) BigDecimal maxRent,
+      @RequestParam(required = false) BigDecimal minArea,
+      @RequestParam(required = false) BigDecimal maxArea,
+      @RequestParam(defaultValue = &quot;newest&quot;) String sort,
+      @RequestParam(defaultValue = &quot;1&quot;) int page,
+      @RequestParam(defaultValue = &quot;9&quot;) int size) {
+<span class="pc bpc" id="L31" title="3 of 8 branches missed.">    require(page &gt;= 1 &amp;&amp; page &lt;= 100000 &amp;&amp; size &gt;= 1 &amp;&amp; size &lt;= 50, &quot;分页参数超出范围&quot;);</span>
+<span class="pc bpc" id="L32" title="3 of 6 branches missed.">    require(keyword.length() &lt;= 100 &amp;&amp; region.length() &lt;= 40 &amp;&amp; layout.length() &lt;= 40, &quot;筛选条件过长&quot;);</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">    for (BigDecimal n : Arrays.asList(minRent, maxRent, minArea, maxArea))</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">      if (n != null)</span>
+<span class="pc bpc" id="L35" title="2 of 4 branches missed.">        require(n.signum() &gt;= 0 &amp;&amp; n.compareTo(new BigDecimal(&quot;99999999&quot;)) &lt;= 0, &quot;筛选值超出范围&quot;);</span>
+<span class="pc bpc" id="L36" title="1 of 6 branches missed.">    require(minRent == null || maxRent == null || minRent.compareTo(maxRent) &lt;= 0, &quot;最低租金不能高于最高租金&quot;);</span>
+<span class="pc bpc" id="L37" title="5 of 6 branches missed.">    require(minArea == null || maxArea == null || minArea.compareTo(maxArea) &lt;= 0, &quot;最小面积不能大于最大面积&quot;);</span>
+<span class="fc" id="L38">    StringBuilder where = new StringBuilder(&quot; WHERE status='PUBLISHED'&quot;);</span>
+<span class="fc" id="L39">    var args = new ArrayList&lt;Object&gt;();</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">    if (!keyword.isBlank()) {</span>
+<span class="fc" id="L41">      where.append(&quot; AND (title LIKE ? OR address LIKE ?)&quot;);</span>
+<span class="fc" id="L42">      args.add(&quot;%&quot; + keyword + &quot;%&quot;);</span>
+<span class="fc" id="L43">      args.add(&quot;%&quot; + keyword + &quot;%&quot;);</span>
+    }
+<span class="fc bfc" id="L45" title="All 2 branches covered.">    if (!region.isBlank()) {</span>
+<span class="fc" id="L46">      where.append(&quot; AND region=?&quot;);</span>
+<span class="fc" id="L47">      args.add(region);</span>
+    }
+<span class="fc bfc" id="L49" title="All 2 branches covered.">    if (!layout.isBlank()) {</span>
+<span class="fc" id="L50">      where.append(&quot; AND layout=?&quot;);</span>
+<span class="fc" id="L51">      args.add(layout);</span>
+    }
+<span class="fc" id="L53">    String[] names = {&quot;rent&gt;=?&quot;, &quot;rent&lt;=?&quot;, &quot;area&gt;=?&quot;, &quot;area&lt;=?&quot;};</span>
+<span class="fc" id="L54">    BigDecimal[] values = {minRent, maxRent, minArea, maxArea};</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">    for (int i = 0; i &lt; values.length; i++)</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">      if (values[i] != null) {</span>
+<span class="fc" id="L57">        where.append(&quot; AND &quot;).append(names[i]);</span>
+<span class="fc" id="L58">        args.add(values[i]);</span>
+      }
+    String order =
+<span class="pc bpc" id="L61" title="4 of 6 branches missed.">        switch (sort) {</span>
+<span class="fc" id="L62">          case &quot;rentAsc&quot; -&gt; &quot;rent ASC,id DESC&quot;;</span>
+<span class="nc" id="L63">          case &quot;rentDesc&quot; -&gt; &quot;rent DESC,id DESC&quot;;</span>
+<span class="nc" id="L64">          case &quot;areaAsc&quot; -&gt; &quot;area ASC,id DESC&quot;;</span>
+<span class="nc" id="L65">          case &quot;areaDesc&quot; -&gt; &quot;area DESC,id DESC&quot;;</span>
+<span class="fc" id="L66">          case &quot;newest&quot; -&gt; &quot;created_at DESC,id DESC&quot;;</span>
+<span class="pc" id="L67">          default -&gt; throw new IllegalArgumentException(&quot;排序无效&quot;);</span>
+        };
+<span class="fc" id="L69">    long count = db.count(&quot;SELECT COUNT(*) FROM t_house&quot; + where, args.toArray());</span>
+<span class="fc" id="L70">    args.add(size);</span>
+<span class="fc" id="L71">    args.add((page - 1) * size);</span>
+<span class="fc" id="L72">    var rows =</span>
+<span class="fc" id="L73">        db.list(</span>
+            &quot;SELECT id,title,region,address,rent,area,layout,facilities,image,created_at FROM&quot;
+                + &quot; t_house&quot;
+                + where
+                + &quot; ORDER BY &quot;
+                + order
+                + &quot; LIMIT ? OFFSET ?&quot;,
+<span class="fc" id="L80">            args.toArray());</span>
+<span class="fc" id="L81">    return Map.of(&quot;items&quot;, rows, &quot;total&quot;, count, &quot;page&quot;, page, &quot;size&quot;, size);</span>
+  }
+
+  @GetMapping(&quot;/houses/{id}&quot;)
+  public Map&lt;String, Object&gt; house(@PathVariable long id, HttpSession s) {
+<span class="fc" id="L86">    var h =</span>
+<span class="fc" id="L87">        db.one(</span>
+            &quot;SELECT&quot;
+                + &quot; id,title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone,status,created_at&quot;
+                + &quot; FROM t_house WHERE id=? AND status='PUBLISHED'&quot;,
+<span class="fc" id="L91">            id);</span>
+<span class="fc" id="L92">    String phone = h.get(&quot;owner_phone&quot;).toString();</span>
+<span class="fc" id="L93">    h.put(</span>
+        &quot;owner_phone&quot;,
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        phone.length() == 11 ? phone.substring(0, 3) + &quot;****&quot; + phone.substring(7) : &quot;联系管理员&quot;);</span>
+<span class="fc" id="L96">    h.put(</span>
+        &quot;favorite&quot;,
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        s.getAttribute(&quot;user&quot;) != null</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            &amp;&amp; db.count(</span>
+                    &quot;SELECT COUNT(*) FROM t_favorite WHERE user_id=? AND house_id=?&quot;,
+<span class="fc" id="L101">                    WebConfig.uid(s),</span>
+<span class="fc" id="L102">                    id)</span>
+                &gt; 0);
+<span class="fc" id="L104">    h.put(</span>
+        &quot;comments&quot;,
+<span class="fc" id="L106">        db.list(</span>
+            &quot;SELECT c.id,c.rating,c.content,c.created_at,CONCAT(SUBSTRING(u.name,1,1),'同学') AS&quot;
+                + &quot; author FROM t_comment c JOIN t_user u ON c.user_id=u.id WHERE c.house_id=? AND&quot;
+                + &quot; c.status='APPROVED' ORDER BY c.id DESC&quot;,
+<span class="fc" id="L110">            id));</span>
+<span class="fc" id="L111">    return h;</span>
+  }
+
+  @GetMapping(&quot;/dictionaries&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; dictionaries() {
+<span class="nc" id="L116">    return db.list(&quot;SELECT * FROM t_dictionary ORDER BY category,id&quot;);</span>
+  }
+
+  @GetMapping(&quot;/houses/{id}/availability&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; availability(
+      @PathVariable long id, @RequestParam java.time.LocalDate day) {
+<span class="nc" id="L122">    db.one(&quot;SELECT id FROM t_house WHERE id=? AND status='PUBLISHED'&quot;, id);</span>
+<span class="nc" id="L123">    require(</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        !day.isBefore(java.time.LocalDate.now())</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            &amp;&amp; !day.isAfter(java.time.LocalDate.now().plusDays(30)),</span>
+        &quot;请选择未来30天内的日期&quot;);
+<span class="nc" id="L127">    List&lt;Map&lt;String, Object&gt;&gt; slots = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">    for (int hour = 9; hour &lt;= 18; hour++) {</span>
+<span class="nc" id="L129">      var time = day.atTime(hour, 0);</span>
+<span class="nc" id="L130">      boolean available =</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">          time.isAfter(java.time.LocalDateTime.now())</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">              &amp;&amp; db.count(</span>
+                      &quot;SELECT COUNT(*) FROM t_reservation WHERE house_id=? AND visit_time=? AND&quot;
+                          + &quot; active_slot IS NOT NULL&quot;,
+<span class="nc" id="L135">                      id,</span>
+                      time)
+                  == 0;
+<span class="nc" id="L138">      slots.add(Map.of(&quot;hour&quot;, String.format(&quot;%02d&quot;, hour), &quot;available&quot;, available));</span>
+    }
+<span class="nc" id="L140">    return slots;</span>
+  }
+
+  @GetMapping(&quot;/notices&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; notices() {
+<span class="nc" id="L145">    return db.list(&quot;SELECT id,title,content,created_at FROM t_notice ORDER BY id DESC LIMIT 20&quot;);</span>
+  }
+
+  @GetMapping(&quot;/favorites&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; favorites(HttpSession s) {
+<span class="nc" id="L150">    WebConfig.student(s);</span>
+<span class="nc" id="L151">    return db.list(</span>
+        &quot;SELECT h.id,h.title,h.region,h.rent,h.area,h.layout,h.image,h.status FROM t_favorite f&quot;
+            + &quot; JOIN t_house h ON f.house_id=h.id WHERE f.user_id=? ORDER BY f.created_at DESC&quot;,
+<span class="nc" id="L154">        WebConfig.uid(s));</span>
+  }
+
+  @PostMapping(&quot;/favorites/{id}&quot;)
+  public Map&lt;String, Object&gt; favorite(@PathVariable long id, HttpSession s) {
+<span class="fc" id="L159">    WebConfig.student(s);</span>
+<span class="fc" id="L160">    db.one(&quot;SELECT id FROM t_house WHERE id=? AND status='PUBLISHED'&quot;, id);</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">    if (db.count(</span>
+<span class="fc" id="L162">            &quot;SELECT COUNT(*) FROM t_favorite WHERE user_id=? AND house_id=?&quot;, WebConfig.uid(s), id)</span>
+        == 0)
+<span class="fc" id="L164">      db.update(&quot;INSERT INTO t_favorite(user_id,house_id) VALUES (?,?)&quot;, WebConfig.uid(s), id);</span>
+<span class="fc" id="L165">    return Map.of(&quot;message&quot;, &quot;已收藏&quot;);</span>
+  }
+
+  @DeleteMapping(&quot;/favorites/{id}&quot;)
+  public Map&lt;String, Object&gt; unfavorite(@PathVariable long id, HttpSession s) {
+<span class="fc" id="L170">    WebConfig.student(s);</span>
+<span class="fc" id="L171">    db.update(&quot;DELETE FROM t_favorite WHERE user_id=? AND house_id=?&quot;, WebConfig.uid(s), id);</span>
+<span class="fc" id="L172">    return Map.of(&quot;message&quot;, &quot;已取消收藏&quot;);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,8 @@
+{
+  "publishedHouses": 9,
+  "executedAt": "2026-10-24T14:38:28.1672451+08:00",
+  "homeStatus": 200,
+  "jar": "dist/rental-hub-1.0.0.jar",
+  "adminLogin": "PASS",
+  "invalidDateStatus": 400
+}

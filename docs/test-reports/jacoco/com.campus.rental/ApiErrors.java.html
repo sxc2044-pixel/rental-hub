@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiErrors.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">校园安居</a> &gt; <a href="index.source.html" class="el_package">com.campus.rental</a> &gt; <span class="el_source">ApiErrors.java</span></div><h1>ApiErrors.java</h1><pre class="source lang-java linenums">package com.campus.rental;
+
+import java.util.Map;
+import org.slf4j.*;
+import org.springframework.dao.*;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.server.ResponseStatusException;
+
+@RestControllerAdvice
+<span class="fc" id="L12">public class ApiErrors {</span>
+<span class="fc" id="L13">  private static final Logger LOG = LoggerFactory.getLogger(ApiErrors.class);</span>
+
+  @ExceptionHandler(ResponseStatusException.class)
+  ResponseEntity&lt;?&gt; business(ResponseStatusException ex) {
+<span class="fc" id="L17">    return ResponseEntity.status(ex.getStatusCode())</span>
+<span class="pc bpc" id="L18" title="1 of 2 branches missed.">        .body(Map.of(&quot;message&quot;, ex.getReason() == null ? &quot;请求失败&quot; : ex.getReason()));</span>
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  ResponseEntity&lt;?&gt; conflict(DataIntegrityViolationException ex) {
+<span class="fc" id="L23">    return ResponseEntity.status(409).body(Map.of(&quot;message&quot;, &quot;记录重复、时段已占用或存在关联数据，请重新选择&quot;));</span>
+  }
+
+  @ExceptionHandler({
+    java.time.DateTimeException.class,
+    IllegalArgumentException.class,
+    org.springframework.http.converter.HttpMessageNotReadableException.class,
+    org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class
+  })
+  ResponseEntity&lt;?&gt; invalid(Exception ex) {
+<span class="nc" id="L33">    return ResponseEntity.badRequest().body(Map.of(&quot;message&quot;, &quot;参数格式错误，请检查输入&quot;));</span>
+  }
+
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  ResponseEntity&lt;?&gt; tooLarge(Exception ex) {
+<span class="nc" id="L38">    return ResponseEntity.status(413).body(Map.of(&quot;message&quot;, &quot;文件不能超过5MB&quot;));</span>
+  }
+
+  @ExceptionHandler(Exception.class)
+  ResponseEntity&lt;?&gt; unexpected(Exception ex) {
+<span class="nc" id="L43">    LOG.error(&quot;服务异常，类型={}&quot;, ex.getClass().getSimpleName());</span>
+<span class="nc" id="L44">    return ResponseEntity.status(503).body(Map.of(&quot;message&quot;, &quot;系统繁忙，请稍后重试&quot;));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

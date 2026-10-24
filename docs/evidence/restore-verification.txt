@@ -1,0 +1,9 @@
+users
+2
+(1 row, 10 ms)
+houses
+10
+(1 row, 0 ms)
+reservations
+2
+(1 row, 0 ms)

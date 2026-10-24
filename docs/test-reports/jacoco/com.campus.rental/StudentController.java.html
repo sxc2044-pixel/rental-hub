@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">校园安居</a> &gt; <a href="index.source.html" class="el_package">com.campus.rental</a> &gt; <span class="el_source">StudentController.java</span></div><h1>StudentController.java</h1><pre class="source lang-java linenums">package com.campus.rental;
+
+import static com.campus.rental.Rules.*;
+
+import jakarta.servlet.http.HttpSession;
+import java.time.*;
+import java.util.*;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api&quot;)
+public class StudentController {
+  public static final String TERMS =
+      &quot;本记录用于租赁意向管理。租赁双方应线下核验身份、房产权属与房屋现状，约定租金、押金、费用、维修责任和解除条件，并另行签订书面合同。本平台不收取租金，不提供电子签章。&quot;;
+  private final Store db;
+  private final ReservationService service;
+
+<span class="fc" id="L19">  public StudentController(Store db, ReservationService service) {</span>
+<span class="fc" id="L20">    this.db = db;</span>
+<span class="fc" id="L21">    this.service = service;</span>
+<span class="fc" id="L22">  }</span>
+
+  @GetMapping(&quot;/reservations&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; reservations(HttpSession s) {
+<span class="nc" id="L26">    WebConfig.student(s);</span>
+<span class="nc" id="L27">    return db.list(</span>
+        &quot;SELECT r.*,h.title FROM t_reservation r JOIN t_house h ON r.house_id=h.id WHERE&quot;
+            + &quot; r.user_id=? ORDER BY r.id DESC&quot;,
+<span class="nc" id="L30">        WebConfig.uid(s));</span>
+  }
+
+  @PostMapping(&quot;/reservations&quot;)
+  public Map&lt;String, Object&gt; reserve(@RequestBody Map&lt;String, Object&gt; data, HttpSession s) {
+<span class="fc" id="L35">    WebConfig.student(s);</span>
+<span class="fc" id="L36">    long h = number(data, &quot;houseId&quot;);</span>
+<span class="fc" id="L37">    var t = visit(text(data, &quot;visitTime&quot;, 16, 19));</span>
+<span class="fc" id="L38">    return Map.of(</span>
+<span class="fc" id="L39">        &quot;id&quot;, service.create(WebConfig.uid(s), h, t, phone(data)), &quot;message&quot;, &quot;预约已提交，等待确认&quot;);</span>
+  }
+
+  @PutMapping(&quot;/reservations/{id}/cancel&quot;)
+  public Map&lt;String, Object&gt; cancel(@PathVariable long id, HttpSession s) {
+<span class="fc" id="L44">    WebConfig.student(s);</span>
+<span class="fc" id="L45">    service.transition(WebConfig.uid(s), id, &quot;CANCELLED&quot;, false);</span>
+<span class="fc" id="L46">    return Map.of(&quot;message&quot;, &quot;预约已取消&quot;);</span>
+  }
+
+  @GetMapping(&quot;/messages&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; messages(HttpSession s) {
+<span class="fc" id="L51">    WebConfig.student(s);</span>
+<span class="fc" id="L52">    return db.list(</span>
+        &quot;SELECT m.*,h.title FROM t_message m JOIN t_house h ON m.house_id=h.id WHERE m.user_id=?&quot;
+            + &quot; ORDER BY m.id DESC&quot;,
+<span class="fc" id="L55">        WebConfig.uid(s));</span>
+  }
+
+  @PostMapping(&quot;/messages&quot;)
+  public Map&lt;String, Object&gt; message(@RequestBody Map&lt;String, Object&gt; data, HttpSession s) {
+<span class="fc" id="L60">    WebConfig.student(s);</span>
+<span class="fc" id="L61">    long h = number(data, &quot;houseId&quot;);</span>
+<span class="fc" id="L62">    db.one(&quot;SELECT id FROM t_house WHERE id=? AND status='PUBLISHED'&quot;, h);</span>
+<span class="fc" id="L63">    long id =</span>
+<span class="fc" id="L64">        db.insert(</span>
+            &quot;INSERT INTO t_message(user_id,house_id,content) VALUES (?,?,?)&quot;,
+<span class="fc" id="L66">            WebConfig.uid(s),</span>
+<span class="fc" id="L67">            h,</span>
+<span class="fc" id="L68">            text(data, &quot;content&quot;, 1, 1000));</span>
+<span class="fc" id="L69">    return Map.of(&quot;id&quot;, id, &quot;message&quot;, &quot;咨询已提交&quot;);</span>
+  }
+
+  @GetMapping(&quot;/contract-template&quot;)
+  public Map&lt;String, String&gt; template() {
+<span class="nc" id="L74">    return Map.of(&quot;title&quot;, &quot;房屋租赁意向模板&quot;, &quot;terms&quot;, TERMS);</span>
+  }
+
+  @GetMapping(&quot;/contracts&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; contracts(HttpSession s) {
+<span class="nc" id="L79">    WebConfig.student(s);</span>
+<span class="nc" id="L80">    return db.list(</span>
+        &quot;SELECT c.*,h.title FROM t_contract c JOIN t_house h ON c.house_id=h.id WHERE c.user_id=?&quot;
+            + &quot; ORDER BY c.id DESC&quot;,
+<span class="nc" id="L83">        WebConfig.uid(s));</span>
+  }
+
+  @PostMapping(&quot;/contracts&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; contract(@RequestBody Map&lt;String, Object&gt; data, HttpSession s) {
+<span class="fc" id="L89">    WebConfig.student(s);</span>
+<span class="fc" id="L90">    long uid = WebConfig.uid(s), h = number(data, &quot;houseId&quot;);</span>
+<span class="fc" id="L91">    var house = db.one(&quot;SELECT id,rent,status FROM t_house WHERE id=? FOR UPDATE&quot;, h);</span>
+<span class="fc" id="L92">    require(&quot;PUBLISHED&quot;.equals(house.get(&quot;status&quot;)), &quot;当前房源不可提交意向&quot;);</span>
+<span class="fc" id="L93">    require(</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        db.count(</span>
+                &quot;SELECT COUNT(*) FROM t_reservation WHERE user_id=? AND house_id=? AND&quot;
+                    + &quot; status='COMPLETED'&quot;,
+<span class="fc" id="L97">                uid,</span>
+<span class="fc" id="L98">                h)</span>
+            &gt; 0,
+        &quot;请完成看房后再提交签约意向&quot;);
+<span class="fc" id="L101">    require(</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        db.count(</span>
+                &quot;SELECT COUNT(*) FROM t_contract WHERE user_id=? AND house_id=? AND status IN&quot;
+                    + &quot; ('INTENT','SIGNED')&quot;,
+<span class="fc" id="L105">                uid,</span>
+<span class="fc" id="L106">                h)</span>
+            == 0,
+        &quot;已有有效签约记录&quot;);
+<span class="fc" id="L109">    LocalDate start = LocalDate.parse(text(data, &quot;startDate&quot;, 10, 10)),</span>
+<span class="fc" id="L110">        end = LocalDate.parse(text(data, &quot;endDate&quot;, 10, 10));</span>
+<span class="fc" id="L111">    require(</span>
+<span class="pc bpc" id="L112" title="3 of 6 branches missed.">        !start.isBefore(LocalDate.now()) &amp;&amp; end.isAfter(start) &amp;&amp; end.isBefore(start.plusYears(6)),</span>
+        &quot;租期应从今日起，且不超过5年&quot;);
+<span class="fc" id="L114">    require(Boolean.TRUE.equals(data.get(&quot;confirmed&quot;)), &quot;请阅读条款并确认签约意向&quot;);</span>
+<span class="fc" id="L115">    long id =</span>
+<span class="fc" id="L116">        db.insert(</span>
+            &quot;INSERT INTO t_contract(user_id,house_id,rent,start_date,end_date,terms) VALUES&quot;
+                + &quot; (?,?,?,?,?,?)&quot;,
+<span class="fc" id="L119">            uid,</span>
+<span class="fc" id="L120">            h,</span>
+<span class="fc" id="L121">            house.get(&quot;rent&quot;),</span>
+            start,
+            end,
+            TERMS);
+<span class="fc" id="L125">    db.audit(uid, &quot;CONTRACT_INTENT&quot;, &quot;CONTRACT&quot;, id, &quot;确认租赁意向&quot;);</span>
+<span class="fc" id="L126">    return Map.of(&quot;id&quot;, id, &quot;message&quot;, &quot;意向已提交，等待管理员处理&quot;);</span>
+  }
+
+  @GetMapping(&quot;/comments&quot;)
+  public List&lt;Map&lt;String, Object&gt;&gt; comments(HttpSession s) {
+<span class="nc" id="L131">    WebConfig.student(s);</span>
+<span class="nc" id="L132">    return db.list(</span>
+        &quot;SELECT c.*,h.title FROM t_comment c JOIN t_house h ON c.house_id=h.id WHERE c.user_id=?&quot;
+            + &quot; ORDER BY c.id DESC&quot;,
+<span class="nc" id="L135">        WebConfig.uid(s));</span>
+  }
+
+  @PostMapping(&quot;/comments&quot;)
+  @Transactional
+  public Map&lt;String, Object&gt; comment(@RequestBody Map&lt;String, Object&gt; data, HttpSession s) {
+<span class="fc" id="L141">    WebConfig.student(s);</span>
+<span class="fc" id="L142">    long uid = WebConfig.uid(s), h = number(data, &quot;houseId&quot;), rating = number(data, &quot;rating&quot;);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">    require(rating &lt;= 5, &quot;评分范围为1至5星&quot;);</span>
+<span class="fc" id="L144">    require(</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        db.count(</span>
+                    &quot;SELECT COUNT(*) FROM t_reservation WHERE user_id=? AND house_id=? AND&quot;
+                        + &quot; status='COMPLETED'&quot;,
+<span class="fc" id="L148">                    uid,</span>
+<span class="fc" id="L149">                    h)</span>
+                &gt; 0
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">            || db.count(</span>
+                    &quot;SELECT COUNT(*) FROM t_contract WHERE user_id=? AND house_id=? AND&quot;
+                        + &quot; status='SIGNED'&quot;,
+<span class="fc" id="L154">                    uid,</span>
+<span class="fc" id="L155">                    h)</span>
+                &gt; 0,
+        &quot;完成看房或签约后才可评价&quot;);
+<span class="fc" id="L158">    String content = text(data, &quot;content&quot;, 1, 1000);</span>
+<span class="fc" id="L159">    var existing =</span>
+<span class="fc" id="L160">        db.list(&quot;SELECT id,status FROM t_comment WHERE user_id=? AND house_id=?&quot;, uid, h);</span>
+    long id;
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">    if (existing.isEmpty())</span>
+<span class="fc" id="L163">      id =</span>
+<span class="fc" id="L164">          db.insert(</span>
+              &quot;INSERT INTO t_comment(user_id,house_id,rating,content) VALUES (?,?,?,?)&quot;,
+<span class="fc" id="L166">              uid,</span>
+<span class="fc" id="L167">              h,</span>
+<span class="fc" id="L168">              rating,</span>
+              content);
+    else {
+<span class="nc" id="L171">      require(&quot;REJECTED&quot;.equals(existing.getFirst().get(&quot;status&quot;)), &quot;每套房源仅能有一条评价，驳回后可修改重提&quot;);</span>
+<span class="nc" id="L172">      id = Store.id(existing.getFirst());</span>
+<span class="nc" id="L173">      db.update(</span>
+          &quot;UPDATE t_comment SET rating=?,content=?,status='PENDING',review_note=NULL WHERE id=?&quot;,
+<span class="nc" id="L175">          rating,</span>
+          content,
+<span class="nc" id="L177">          id);</span>
+    }
+<span class="fc" id="L179">    db.audit(uid, &quot;COMMENT_SUBMIT&quot;, &quot;COMMENT&quot;, id, &quot;提交待审评价&quot;);</span>
+<span class="fc" id="L180">    return Map.of(&quot;id&quot;, id, &quot;message&quot;, &quot;评价已提交，审核通过后展示&quot;);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

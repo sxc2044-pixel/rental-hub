@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Bootstrap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">校园安居</a> &gt; <a href="index.source.html" class="el_package">com.campus.rental</a> &gt; <span class="el_source">Bootstrap.java</span></div><h1>Bootstrap.java</h1><pre class="source lang-java linenums">package com.campus.rental;
+
+import java.sql.*;
+import java.time.*;
+import java.util.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Component
+public class Bootstrap implements CommandLineRunner {
+  private final Store db;
+  private final boolean demo;
+<span class="fc" id="L16">  private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();</span>
+
+<span class="fc" id="L18">  public Bootstrap(Store db, @Value(&quot;${rental.seed-demo:false}&quot;) boolean demo) {</span>
+<span class="fc" id="L19">    this.db = db;</span>
+<span class="fc" id="L20">    this.demo = demo;</span>
+<span class="fc" id="L21">  }</span>
+
+  @Override
+  @Transactional
+  public void run(String... args) throws Exception {
+<span class="fc" id="L26">    ensureIndex(&quot;t_house&quot;, &quot;idx_house_search&quot;, &quot;status,region,layout,rent,id&quot;);</span>
+<span class="fc" id="L27">    ensureIndex(&quot;t_reservation&quot;, &quot;idx_reserve_user&quot;, &quot;user_id,status&quot;);</span>
+<span class="fc" id="L28">    ensureIndex(&quot;t_contract&quot;, &quot;idx_contract_house&quot;, &quot;house_id,status,start_date,end_date&quot;);</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">    if (db.count(&quot;SELECT COUNT(*) FROM t_dictionary&quot;) == 0) {</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">      for (String label : List.of(&quot;天河区&quot;, &quot;海珠区&quot;, &quot;番禺区&quot;, &quot;越秀区&quot;))</span>
+<span class="fc" id="L31">        db.update(&quot;INSERT INTO t_dictionary(category,label) VALUES ('REGION',?)&quot;, label);</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">      for (String label : List.of(&quot;一室一厅&quot;, &quot;两室一厅&quot;, &quot;三室两厅&quot;, &quot;单间&quot;))</span>
+<span class="fc" id="L33">        db.update(&quot;INSERT INTO t_dictionary(category,label) VALUES ('LAYOUT',?)&quot;, label);</span>
+<span class="fc" id="L34">      db.update(</span>
+          &quot;INSERT INTO t_dictionary(category,label,min_value,max_value) VALUES&quot;
+              + &quot; ('RENT','1500元以下',0,1500),('RENT','1500至2500元',1500,2500),('RENT','2500至5000元',2500,5000)&quot;);
+    }
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">    if (db.count(&quot;SELECT COUNT(*) FROM t_user WHERE role='ADMIN'&quot;) == 0) {</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">      String password = demo ? &quot;Admin123!&quot; : System.getenv(&quot;ADMIN_PASSWORD&quot;);</span>
+<span class="pc bpc" id="L40" title="2 of 4 branches missed.">      if (password == null || password.length() &lt; 8)</span>
+<span class="nc" id="L41">        throw new IllegalStateException(&quot;首次启动请设置 ADMIN_PASSWORD（至少8位，包含字母数字）&quot;);</span>
+<span class="fc" id="L42">      Rules.password(Map.of(&quot;password&quot;, password));</span>
+<span class="fc" id="L43">      db.update(</span>
+          &quot;INSERT INTO t_user(account,password_hash,recovery_hash,name,role) VALUES&quot;
+              + &quot; ('admin',?,?,?,'ADMIN')&quot;,
+<span class="fc" id="L46">          encoder.encode(password),</span>
+<span class="fc" id="L47">          encoder.encode(UUID.randomUUID().toString()),</span>
+          &quot;平台管理员&quot;);
+    }
+<span class="pc bpc" id="L50" title="2 of 4 branches missed.">    if (!demo || db.count(&quot;SELECT COUNT(*) FROM t_house&quot;) &gt; 0) return;</span>
+<span class="fc" id="L51">    long admin =</span>
+<span class="fc" id="L52">        ((Number) db.one(&quot;SELECT id FROM t_user WHERE role='ADMIN' ORDER BY id LIMIT 1&quot;).get(&quot;id&quot;))</span>
+<span class="fc" id="L53">            .longValue();</span>
+    long student;
+<span class="fc" id="L55">    var students = db.list(&quot;SELECT id FROM t_user WHERE account='2023100513'&quot;);</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">    if (students.isEmpty())</span>
+<span class="fc" id="L57">      student =</span>
+<span class="fc" id="L58">          db.insert(</span>
+              &quot;INSERT INTO t_user(account,password_hash,recovery_hash,name,school,phone) VALUES&quot;
+                  + &quot; (?,?,?,?,?,?)&quot;,
+              &quot;2023100513&quot;,
+<span class="fc" id="L62">              encoder.encode(&quot;Student123!&quot;),</span>
+<span class="fc" id="L63">              encoder.encode(&quot;demo-recovery-2026&quot;),</span>
+              &quot;演示同学&quot;,
+              &quot;暨南大学&quot;,
+              &quot;13800138001&quot;);
+<span class="nc" id="L67">    else student = Store.id(students.getFirst());</span>
+<span class="fc" id="L68">    String[] titles = {</span>
+      &quot;暨大旁的阳光一居&quot;,
+      &quot;江畔清爽两居室&quot;,
+      &quot;大学城静谧书香单间&quot;,
+      &quot;地铁旁的温暖小家&quot;,
+      &quot;绿意环绕的宽敞三居&quot;,
+      &quot;老城里的明亮公寓&quot;,
+      &quot;图书馆旁的独立空间&quot;,
+      &quot;校园南门舒适两居&quot;,
+      &quot;城市天际线景观房&quot;,
+      &quot;待审核的房源示例&quot;
+    };
+<span class="fc" id="L80">    String[] regions = {&quot;天河区&quot;, &quot;海珠区&quot;, &quot;番禺区&quot;, &quot;天河区&quot;, &quot;番禺区&quot;, &quot;越秀区&quot;, &quot;天河区&quot;, &quot;番禺区&quot;, &quot;海珠区&quot;, &quot;天河区&quot;};</span>
+<span class="fc" id="L81">    String[] layouts = {&quot;一室一厅&quot;, &quot;两室一厅&quot;, &quot;单间&quot;, &quot;一室一厅&quot;, &quot;三室两厅&quot;, &quot;一室一厅&quot;, &quot;单间&quot;, &quot;两室一厅&quot;, &quot;两室一厅&quot;, &quot;单间&quot;};</span>
+<span class="fc" id="L82">    int[] rents = {1800, 2600, 980, 2200, 3600, 1650, 1200, 2400, 3200, 1500},</span>
+<span class="fc" id="L83">        areas = {42, 68, 22, 38, 98, 35, 26, 62, 76, 28};</span>
+<span class="fc" id="L84">    List&lt;Long&gt; ids = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">    for (int i = 0; i &lt; titles.length; i++) {</span>
+<span class="fc" id="L86">      long id =</span>
+<span class="fc" id="L87">          db.insert(</span>
+              &quot;INSERT INTO&quot;
+                  + &quot; t_house(title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone,status,reviewer_id,reviewed_at,review_note)&quot;
+                  + &quot; VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)&quot;,
+              titles[i],
+              regions[i],
+              regions[i] + &quot;大学路&quot; + (i + 1) + &quot;号（演示地址）&quot;,
+<span class="fc" id="L94">              rents[i],</span>
+<span class="fc" id="L95">              areas[i],</span>
+              layouts[i],
+              &quot;空调 / 热水器 / 洗衣机 / 宽带 / 独立卫浴&quot;,
+              &quot;采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为课程演示数据，插图非房屋实拍，实际租赁前请核验房源。&quot;,
+              &quot;/images/room-&quot; + (i % 6 + 1) + &quot;.svg&quot;,
+              &quot;示例房东&quot;,
+              &quot;13800138000&quot;,
+<span class="fc bfc" id="L102" title="All 2 branches covered.">              i == 9 ? &quot;PENDING&quot; : &quot;PUBLISHED&quot;,</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">              i == 9 ? null : admin,</span>
+              &quot;课程演示数据已标注&quot;);
+<span class="fc" id="L105">      ids.add(id);</span>
+    }
+<span class="fc" id="L107">    db.update(&quot;INSERT INTO t_favorite(user_id,house_id) VALUES (?,?)&quot;, student, ids.getFirst());</span>
+<span class="fc" id="L108">    db.update(</span>
+        &quot;INSERT INTO t_reservation(user_id,house_id,visit_time,phone,status,active_slot) VALUES&quot;
+            + &quot; (?,?,?,?,'COMPLETED',?)&quot;,
+<span class="fc" id="L111">        student,</span>
+<span class="fc" id="L112">        ids.get(1),</span>
+<span class="fc" id="L113">        LocalDateTime.now().minusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0),</span>
+        &quot;13800138001&quot;,
+        &quot;demo-completed-slot&quot;);
+<span class="fc" id="L116">    db.update(</span>
+        &quot;INSERT INTO t_message(user_id,house_id,content,reply,replied_by,replied_at) VALUES&quot;
+            + &quot; (?,?,?,?,?,CURRENT_TIMESTAMP)&quot;,
+<span class="fc" id="L119">        student,</span>
+<span class="fc" id="L120">        ids.getFirst(),</span>
+        &quot;请问可以预约周末看房吗？&quot;,
+        &quot;可以，请在房源详情中选择未来30天内的整点时段。&quot;,
+<span class="fc" id="L123">        admin);</span>
+<span class="fc" id="L124">    db.update(</span>
+        &quot;INSERT INTO t_notice(title,content,publisher_id) VALUES (?,?,?)&quot;,
+        &quot;欢迎使用校园安居&quot;,
+        &quot;房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。当前房源为课程演示数据。&quot;,
+<span class="fc" id="L128">        admin);</span>
+<span class="fc" id="L129">    db.audit(admin, &quot;DEMO_SEED&quot;, &quot;SYSTEM&quot;, 1, &quot;初始化课程演示数据&quot;);</span>
+<span class="fc" id="L130">  }</span>
+
+  private void ensureIndex(String table, String index, String columns) throws SQLException {
+<span class="fc" id="L133">    boolean found = false;</span>
+<span class="fc" id="L134">    try (var connection = db.dataSource().getConnection();</span>
+<span class="fc" id="L135">        var rows =</span>
+            connection
+<span class="fc" id="L137">                .getMetaData()</span>
+<span class="fc" id="L138">                .getIndexInfo(connection.getCatalog(), null, table, false, false)) {</span>
+<span class="pc bpc" id="L139" title="1 of 4 branches missed.">      while (rows.next()) if (index.equalsIgnoreCase(rows.getString(&quot;INDEX_NAME&quot;))) found = true;</span>
+    }
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">    if (!found) db.update(&quot;CREATE INDEX &quot; + index + &quot; ON &quot; + table + &quot;(&quot; + columns + &quot;)&quot;);</span>
+<span class="fc" id="L142">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

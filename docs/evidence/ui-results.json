@@ -1,0 +1,48 @@
+{
+  "base": "http://127.0.0.1:8080",
+  "executedAt": "2026-10-24T06:13:31.771Z",
+  "browser": "Chromium",
+  "results": [
+    {
+      "name": "房源首页及本地插图",
+      "result": "PASS"
+    },
+    {
+      "name": "搜索与空结果",
+      "result": "PASS"
+    },
+    {
+      "name": "学生登录",
+      "result": "PASS"
+    },
+    {
+      "name": "房源详情与预约表单",
+      "result": "PASS"
+    },
+    {
+      "name": "学生个人页面",
+      "result": "PASS"
+    },
+    {
+      "name": "学生越权阻止",
+      "result": "PASS"
+    },
+    {
+      "name": "管理员登录及统计",
+      "result": "PASS"
+    },
+    {
+      "name": "管理端全部功能入口",
+      "result": "PASS"
+    },
+    {
+      "name": "房源录入表单与图片",
+      "result": "PASS"
+    },
+    {
+      "name": "移动端首页无横向溢出",
+      "result": "PASS"
+    }
+  ],
+  "pageErrors": []
+}
