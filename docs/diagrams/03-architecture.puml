@@ -15,7 +15,7 @@ rectangle "Windows 本机" {
  folder "本机 data/uploads\n房源图片 认证材料" as Files
 }
 node "Kali 虚拟机" {
- database "MySQL 8 / MariaDB\n数据库 kali" as MySQL
+ database "MySQL 8 / MariaDB\n数据库 rental" as MySQL
 }
 Browser --> Guard : HTTP JSON / 同源
 Guard --> Controllers
@@ -28,7 +28,7 @@ Store --> MySQL : JDBC / 默认 mysql profile
 Navicat --> MySQL : 独立管理连接 / 3306
 Controllers --> Files : 图片读写
 note bottom of MySQL
-192.168.93.128:3306/kali
-连接无响应，按要求暂缓远程联调
+192.168.93.128:3306/rental
+已完成真实数据库页面流程验证
 end note
 @enduml

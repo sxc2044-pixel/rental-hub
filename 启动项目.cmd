@@ -10,7 +10,8 @@ if not exist "config\application-local.properties" (
  pause
  exit /b 1
 )
-echo 校园安居将在 Windows 本机启动，数据库为 Kali 的 192.168.93.128:3306/kali。
+echo 校园安居将在 Windows 本机启动，数据库为 Kali 的 192.168.93.128:3306/rental。
+echo 数据库握手可能需要约10至15秒，请等待网站启动完成。
 echo 启动成功后访问 http://127.0.0.1:8080 。请保留此窗口。
 if exist "dist\rental-hub-1.0.0.jar" (
  java -Dfile.encoding=UTF-8 -jar "dist\rental-hub-1.0.0.jar"
@@ -19,4 +20,5 @@ if exist "dist\rental-hub-1.0.0.jar" (
 ) else (
  echo 请先执行 mvn package，或使用包含 dist 的完整交付包。
 )
+echo 服务已停止。若启动失败，请检查上方错误及 logs\rental-hub.log。
 pause

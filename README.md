@@ -4,7 +4,7 @@
 
 ## 快速运行
 
-确保安装JDK 21，双击 **启动项目.cmd**。本机私有连接配置已经填写；分享包首次启动会创建并打开 `config/application-local.properties`，填写数据库密码后重新启动。目标为 `192.168.93.128:3306/kali`，用户名 `root`。启动成功后访问 [校园安居](http://127.0.0.1:8080)。随交付包提供 `dist/rental-hub-1.0.0.jar`，无需重新下载依赖即可运行。
+确保安装JDK 21，双击 **启动项目.cmd**。本机私有连接配置已经填写；分享包首次启动会创建并打开 `config/application-local.properties`，填写数据库密码后重新启动。目标为 `192.168.93.128:3306/rental`，用户名 `root`。启动成功后访问 [校园安居](http://127.0.0.1:8080)。随交付包提供 `dist/rental-hub-1.0.0.jar`，无需重新下载依赖即可运行。
 
 | 角色 | 演示账号 | 演示密码 |
 | --- | --- | --- |
@@ -17,10 +17,10 @@
 
 ```powershell
 mvn -B -ntp verify
-java -Dfile.encoding=UTF-8 -jar target/rental-hub-1.0.0.jar
+java '-Dfile.encoding=UTF-8' -jar target/rental-hub-1.0.0.jar
 ```
 
-也可运行 `./scripts/start.ps1`，默认加载本机私有远程连接配置。Kali暂时不可用时，可显式双击 **启动演示.cmd** 或运行 `./scripts/start.ps1 -Profile demo`，使用独立H2文件库验证页面；常规启动不会自动回退数据库。PowerShell脚本若受本机执行策略限制，可使用CMD启动脚本或直接运行Java命令，无需更改全局系统策略。
+也可运行 `./scripts/start.ps1`，默认加载本机私有远程连接配置。Kali暂时不可用时，可显式运行 `./scripts/start.ps1 -Profile demo`，使用独立H2文件库验证页面；常规启动不会自动回退数据库。PowerShell脚本若受本机执行策略限制，可使用CMD启动脚本或直接运行Java命令，无需更改全局系统策略。
 
 默认监听127.0.0.1:8080，按Ctrl+C停止。端口占用时设置 `PORT=8081` 后使用Java启动，或运行 `./scripts/start.ps1 -Profile demo -Port 8081`。MySQL业务数据保存在Kali，上传文件位于Windows项目 `data/uploads`，日志位于 `logs`；H2模式的数据库位于 `data`。再次启动保留已有数据，不重复覆盖示例房源。
 
@@ -41,7 +41,7 @@ src/main/java/com/campus/rental  控制器、服务、规则与数据访问
 src/main/resources             数据库配置、表结构与本地页面资源
 src/test/java                  JUnit规则、业务与性能测试
 scripts                        启动、浏览器验收、备份恢复和只读诊断
-config/local.example.ps1        可复制的远程数据库连接示例
+config/application-local.example.properties  统一连接配置模板
 docs/diagrams                   可编辑PlantUML图及渲染图片
 docs/evidence                   实际截图、测试JSON、Git模拟与恢复证据
 docs/test-reports               本次测试与覆盖率归档
@@ -50,10 +50,11 @@ dist                           本机可直接运行的JAR
 
 ## Kali数据库
 
-目标配置是 `192.168.93.128:3306/kali`。本次再次只读检查仍未收到数据库响应，按用户要求暂缓联调；连接失败时常规启动会报错退出，不会改用其他数据库。MySQL运行与性能尚未验收，不用H2结果替代。完整步骤见 [Kali部署与备份](docs/Kali部署与备份.md)。
+目标配置为 `192.168.93.128:3306/rental`，实际服务为 MariaDB 11.4.5，当前 mysql profile 通过兼容协议连接。已修复约10.5秒握手导致的超时，读取超时调整为30秒；已完成真实数据库上的10组浏览器流程和字典/时段接口验证。性能与100并发测量仍只代表隔离H2环境。
 
-CMD及直接Java启动读取 `config/application-local.properties`；可复制同目录 `.example.properties` 填写。PowerShell入口读取 `config/local.ps1`，可从 `local.example.ps1` 复制填写，执行 `./scripts/start.ps1 -Profile local`。环境变量优先于properties；使用其中一种入口即可，修改连接时同步维护实际使用的配置。本机已填写的私有local配置不进入Git或可分享压缩包。`SEED_DEMO=false` 时不创建固定学生和示例房源；首次无管理员时通过 `ADMIN_PASSWORD` 设置密码。Kali实际使用MariaDB时改用mariadb profile。
+CMD和PowerShell入口统一读取 `config/application-local.properties`，无需维护第二份密码。首次从分享包启动时，从 `application-local.example.properties` 创建私有配置并填写密码。环境变量若定义同名参数，优先于文件。旧的 local.ps1/local.example.ps1 已移出项目归档；`-Profile local` 仍兼容映射为mysql。MariaDB profile也支持同一份私有properties配置。
 
+`rental_db`经核查仅为旧示例库，业务记录为空；在完整SQL备份后按用户要求删除。原 `kali` 的10张表及全部记录已迁移至 `rental`，逐表校验一致后删除旧库。私有SQL备份不进入分享包。
 SQL初始化不删除现有表，不负责迁移不兼容的历史结构，连接前应确认目标库内没有其他系统的同名 `t_` 表。推荐创建仅Windows主机可访问的项目专用账号。
 
 ## 测试与证据

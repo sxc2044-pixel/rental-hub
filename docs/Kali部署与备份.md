@@ -1,20 +1,23 @@
 # Kali 数据库连接和备份
 
-Windows本机运行Java网站，默认通过JDBC连接Kali的MySQL：192.168.93.128:3306/kali，用户名root。本机Navicat是独立数据库管理客户端，不是数据库服务；它与Java分别连接同一个Kali数据库。CMD/Java入口读取私有 `config/application-local.properties`，PowerShell入口读取私有 `config/local.ps1`，两份本机配置均已填写，且不进入Git或可分享压缩包。本次按用户指示暂缓Kali联调，因此以下是部署步骤，不能作为已通过远程验收的证据。
+Windows本机运行Java网站，Navicat独立管理Kali数据库。实际服务器为MariaDB 11.4.5，应用的mysql profile通过兼容协议连接，目标为192.168.93.128:3306/rental，用户名root。
 
-## 切换远程数据库
+CMD和PowerShell统一读取私有 `config/application-local.properties`，分享包只提供 `.example.properties` 模板。旧的local.ps1两套配置已归档，避免修改一处而另一入口仍使用旧参数。
 
-1. Kali数据库名为 `kali`，地址为 `192.168.93.128:3306`。确认与Windows处于可互访的虚拟网段。Kali常见默认数据库为MariaDB，应用同时提供mysql和mariadb配置，应以数据库实际产品为准。
-2. Kali执行 `sudo systemctl status mysql` 或 `sudo systemctl status mariadb`，再执行 `sudo ss -lntp | grep 3306` 查看是否监听虚拟网卡IP。若只监听127.0.0.1，按实际MySQL/MariaDB配置文件设置 `bind-address` 为虚拟网卡地址并重启数据库服务。
-3. 以管理员身份执行 `docs/数据库部署.sql`。推荐项目专用用户，仅允许Windows主机IP访问，不要在公网开放root账号。
-4. 双击 `启动项目.cmd`。分享包首次运行会由 `config/application-local.example.properties` 创建私有配置并打开记事本，填写密码后重新启动。若使用PowerShell，则复制 `config/local.example.ps1` 为 `config/local.ps1` 并填写数据库密码。MySQL使用 `SPRING_PROFILES_ACTIVE=mysql`，MariaDB使用 `mariadb`。首次无管理员账号时设置 `ADMIN_PASSWORD`。需要示例数据时，将 `SEED_DEMO` 设为true。
-5. 执行 `./scripts/start.ps1 -Profile local`。浏览器访问 `http://127.0.0.1:8080`。服务和界面在Windows运行，只有数据库位于虚拟机。
+本次连接握手约需10.5秒，超过原10秒读取超时；修复为30秒后，网站已连接真实Kali数据库并通过10组浏览器流程检查。服务器skip_name_resolve=0可能与握手等待有关，本次没有修改数据库全局DNS或授权设置。
 
-数据库表通过 `schema.sql` 创建，索引由 `Bootstrap` 通过元数据检查后创建。不要将项目直接连接至已有不兼容的同名表。数据表升级应先备份并编写明确的迁移SQL。
+按用户要求，原kali库的10张表及全部记录迁移至rental并逐表校验；旧rental_db仅含初始化管理员、12条示例房源、14条字典及1条公告，无预约、合同、评价、咨询等业务记录，已完整备份后删除。私有备份位于工作区 `.work/database-backups/20261024-rename-rental/`，不进入分享包。
+
+## 首次部署
+
+1. Navicat连接192.168.93.128:3306，执行docs/数据库部署.sql，创建rental数据库。
+2. 双击启动项目.cmd。分享包首次运行会创建私有配置，填写数据库密码后再启动。
+3. 默认约需15秒启动，看到日志完成后访问http://127.0.0.1:8080。保留Java进程，打开Kali或Navicat本身不会启动网站。
+4. 数据库表由schema.sql创建，索引由Bootstrap检查。已有同名不兼容表不会自动迁移。
 
 ## 独立H2验证模式的备份与恢复
 
-Kali不可连接时，显式运行 `启动演示.cmd` 或 `scripts/start.ps1 -Profile demo`。此时数据保存在本机H2库，不会同步到Kali。常规MySQL启动不会自动回退到H2。
+Kali不可连接时，显式运行 `scripts/start.ps1 -Profile demo`。此时数据保存在本机H2库，不会同步到Kali。常规MySQL启动不会自动回退到H2。
 
 程序运行期间每天北京时间02:00自动备份H2数据库和上传图片。也可在管理员的“操作审计”页面点击“备份本机数据”。文件位于 `data/backups/rental-backup-时间.zip`，内含在线一致性数据库快照 `database.zip` 与 `uploads`。备份可能包含认证材料，应保存在受控目录。
 

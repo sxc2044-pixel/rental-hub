@@ -1,6 +1,9 @@
 2026-10-24
-Read-only JDBC check: 192.168.93.128:3306/kali, user root
-SQLState=08S01; Communications link failure; no packets received.
-Repeated outside sandbox with the same result.
-Default application profile verified as mysql; startup fails on connection error, without H2 fallback.
-No remote tables or data modified.
+Final target: 192.168.93.128:3306/rental
+Actual server: 11.4.5-MariaDB-1; mysql compatible JDBC protocol.
+Measured connection establishment: 10.5s; skip_name_resolve=0.
+Fixed JDBC socketTimeout to 30s, connectTimeout to 10s, pool connection timeout to 30s.
+Database kali migrated to rental with 10 table row counts and full-row checksums matching.
+Old kali removed after verified migration; rental_db removed after complete backup and explicit user confirmation.
+HTTP 200; published houses=9; 10 browser checks and dictionary/availability HTTP checks passed on rental.
+No remote load or long-term availability test claimed.

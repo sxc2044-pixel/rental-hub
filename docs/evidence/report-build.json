@@ -8,12 +8,6 @@
   "sections": 2,
   "pages": 41,
   "renderEngine": "Microsoft Word + bundled Poppler",
-  "visualInspection": "All 41 pages verified; 15 changed pages inspected and 26 unchanged pages matched prior approved render",
-  "reportSha256": "43f0df383ce7811dcd5966f442e91d1d207aa797bb837f00e3d32c1f44b8a405",
-  "applicationJarSha256": "1cfbc53c62900ab1c19b94ea6f2faf22190820e7256e3f363bba9893269a4b56",
-  "unitAndIntegrationTests": 64,
-  "browserChecks": 10,
-  "kaliValidation": "MySQL 192.168.93.128:3306/kali: no response; deferred by user",
-  "defaultProfile": "mysql",
-  "applicationLocation": "Windows localhost; Navicat independently manages Kali MySQL"
+  "visualInspection": "41 pages verified; 12 changed pages inspected, 29 unchanged pages matched prior approved render",
+  "reportSha256": "c5a77d4b69a3cfda438abb2b4864bfe039d9303c0bee6fb2b9ff3900a884e79d"
 }

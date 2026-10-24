@@ -1,11 +1,13 @@
-param([ValidateSet('local','demo','mysql','mariadb')][string]$Profile='local',[int]$Port=8080)
+param([ValidateSet('local','demo','mysql','mariadb')][string]$Profile='mysql',[int]$Port=8080)
 $ErrorActionPreference='Stop'
 Set-Location (Split-Path $PSScriptRoot -Parent)
 $env:PORT="$Port"
-if($Profile -eq 'local') {
-    if(!(Test-Path -LiteralPath 'config/local.ps1')) {throw '请复制 config/local.example.ps1 为 config/local.ps1 并填写连接信息，或用 -Profile demo 启动。'}
-    . ./config/local.ps1
-} else {$env:SPRING_PROFILES_ACTIVE=$Profile}
+if($Profile -eq 'local') {$Profile='mysql'} # 兼容旧命令；连接参数统一从同一份 properties 读取。
+$env:SPRING_PROFILES_ACTIVE=$Profile
+if($Profile -ne 'demo' -and !(Test-Path -LiteralPath 'config/application-local.properties')) {
+    Copy-Item -LiteralPath 'config/application-local.example.properties' -Destination 'config/application-local.properties'
+    throw '请填写 config/application-local.properties 中的数据库密码，然后重新启动。'
+}
 $jar=if(Test-Path -LiteralPath 'dist/rental-hub-1.0.0.jar') {'dist/rental-hub-1.0.0.jar'} else {'target/rental-hub-1.0.0.jar'}
 if(!(Test-Path -LiteralPath $jar)) {
     & mvn -B -ntp package

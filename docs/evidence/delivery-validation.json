@@ -1,19 +1,21 @@
 {
-  "output": "C:\\Users\\31042\\Desktop\\软件工程\\交付成果\\软件工程-实验报告汇总版.docx",
-  "experiments": 10,
-  "testCount": 64,
-  "lineCoverage": "84.54%",
-  "branchCoverage": "57.80%",
-  "sourceSha256": "3c36d525bf5b3877e10da05d114f09f3df275c7bd841fd2c95c0395401d648b4",
-  "sections": 2,
-  "pages": 41,
-  "renderEngine": "Microsoft Word + bundled Poppler",
-  "visualInspection": "All 41 pages verified; 15 changed pages inspected and 26 unchanged pages matched prior approved render",
-  "reportSha256": "43f0df383ce7811dcd5966f442e91d1d207aa797bb837f00e3d32c1f44b8a405",
-  "applicationJarSha256": "1cfbc53c62900ab1c19b94ea6f2faf22190820e7256e3f363bba9893269a4b56",
-  "unitAndIntegrationTests": 64,
-  "browserChecks": 10,
-  "kaliValidation": "MySQL 192.168.93.128:3306/kali: no response; deferred by user",
+  "executedAt": "2026-10-24T12:08:31.259596+00:00",
   "defaultProfile": "mysql",
-  "applicationLocation": "Windows localhost; Navicat independently manages Kali MySQL"
+  "actualServer": "11.4.5-MariaDB-1",
+  "database": "192.168.93.128:3306/rental",
+  "httpStatus": 200,
+  "publishedHouses": 9,
+  "unitAndIntegrationTests": 64,
+  "realKaliBrowserChecks": 10,
+  "migration": "10 table row counts and full-row SHA256 matched before removal of old schemas",
+  "removedOldSchemas": [
+    "kali",
+    "rental_db"
+  ],
+  "rentalDbRemoval": "Explicitly confirmed by user after full SQL backup",
+  "privateBackupsIncludedInZip": false,
+  "reportPages": 41,
+  "applicationJarSha256": "67c6bdbe3184a8ff161b3f17c20074bdd60a6474edb9cd6897b7f5d247f7f933",
+  "reportSha256": "c5a77d4b69a3cfda438abb2b4864bfe039d9303c0bee6fb2b9ff3900a884e79d",
+  "remoteLoadTest": "Not performed; performance evidence is isolated H2 only"
 }

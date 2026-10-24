@@ -4,7 +4,7 @@
 set -euo pipefail
 umask 077
 backup_dir="${BACKUP_DIR:-$HOME/rental-backups}"
-database="${DB_NAME:-kali}"
+database="${DB_NAME:-rental}"
 credentials="${MYSQL_DEFAULTS_FILE:-$HOME/.my-rental.cnf}"
 mkdir -p "$backup_dir"
 if [[ ! -f "$credentials" ]]; then printf '%s\n' '请先创建仅当前用户可读的MySQL defaults配置文件。' >&2; exit 1; fi
