@@ -1,12 +1,12 @@
 {
-  "executedAt": "2026-10-24T12:08:31.259596+00:00",
+  "executedAt": "2026-10-24T13:37:24.899665+00:00",
   "defaultProfile": "mysql",
   "actualServer": "11.4.5-MariaDB-1",
   "database": "192.168.93.128:3306/rental",
   "httpStatus": 200,
-  "publishedHouses": 9,
-  "unitAndIntegrationTests": 64,
-  "realKaliBrowserChecks": 10,
+  "publishedHouses": 33,
+  "unitAndIntegrationTests": 68,
+  "realKaliBrowserChecks": 14,
   "migration": "10 table row counts and full-row SHA256 matched before removal of old schemas",
   "removedOldSchemas": [
     "kali",
@@ -14,8 +14,14 @@
   ],
   "rentalDbRemoval": "Explicitly confirmed by user after full SQL backup",
   "privateBackupsIncludedInZip": false,
-  "reportPages": 41,
-  "applicationJarSha256": "67c6bdbe3184a8ff161b3f17c20074bdd60a6474edb9cd6897b7f5d247f7f933",
-  "reportSha256": "c5a77d4b69a3cfda438abb2b4864bfe039d9303c0bee6fb2b9ff3900a884e79d",
-  "remoteLoadTest": "Not performed; performance evidence is isolated H2 only"
+  "reportPages": 42,
+  "applicationJarSha256": "210d61c6ef563e4c912c6bda7c5271cc693a28bbff7f5d0780519278d542825d",
+  "reportSha256": "47c2b15415b1b535fc4a65e8b0e5ab108560792fbe47af0858141b5f78f36139",
+  "remoteLoadTest": "Not performed; performance evidence is isolated H2 only",
+  "totalHouses": 34,
+  "students": 25,
+  "newStudentAccounts": "2023100514-2023100537",
+  "localReferencePhotos": 8,
+  "facilityIcons": 12,
+  "newSampleDataProtection": "Persistent one-time marker; existing accounts and user edits preserved"
 }

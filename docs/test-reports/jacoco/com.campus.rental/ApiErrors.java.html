@@ -30,7 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
     org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class
   })
   ResponseEntity&lt;?&gt; invalid(Exception ex) {
-<span class="nc" id="L33">    return ResponseEntity.badRequest().body(Map.of(&quot;message&quot;, &quot;参数格式错误，请检查输入&quot;));</span>
+<span class="fc" id="L33">    return ResponseEntity.badRequest().body(Map.of(&quot;message&quot;, &quot;参数格式错误，请检查输入&quot;));</span>
   }
 
   @ExceptionHandler(MaxUploadSizeExceededException.class)

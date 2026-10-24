@@ -1,13 +1,13 @@
 {
   "output": "C:\\Users\\31042\\Desktop\\软件工程\\交付成果\\软件工程-实验报告汇总版.docx",
   "experiments": 10,
-  "testCount": 64,
-  "lineCoverage": "84.54%",
-  "branchCoverage": "57.80%",
+  "testCount": 68,
+  "lineCoverage": "86.04%",
+  "branchCoverage": "61.35%",
   "sourceSha256": "3c36d525bf5b3877e10da05d114f09f3df275c7bd841fd2c95c0395401d648b4",
   "sections": 2,
-  "pages": 41,
+  "pages": 42,
   "renderEngine": "Microsoft Word + bundled Poppler",
-  "visualInspection": "41 pages verified; 12 changed pages inspected, 29 unchanged pages matched prior approved render",
-  "reportSha256": "c5a77d4b69a3cfda438abb2b4864bfe039d9303c0bee6fb2b9ff3900a884e79d"
+  "visualInspection": "42 pages checked: 21 changed pages visually inspected, 21 unchanged pages matched prior approved render",
+  "reportSha256": "47c2b15415b1b535fc4a65e8b0e5ab108560792fbe47af0858141b5f78f36139"
 }

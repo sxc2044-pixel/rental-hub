@@ -1,17 +1,17 @@
 {
-  "executedAt" : "2026-10-24T19:48:21.999577300+08:00",
+  "executedAt" : "2026-10-24T21:30:30.056246300+08:00",
   "database" : "H2 in-memory / MySQL mode",
   "scope" : "仅本机HTTP接口与隔离内存数据库，非Kali MySQL或完整浏览器加载测试",
   "baselineRows" : 1010,
   "largeRows" : 100000,
   "serialRequestsPerGroup" : 20,
-  "baselineP95Ms" : 5.4088,
-  "largeP95Ms" : 3.7711,
+  "baselineP95Ms" : 4.9156,
+  "largeP95Ms" : 4.6597,
   "concurrentUsers" : 100,
   "concurrentRequests" : 100,
   "successfulRequests" : 100,
-  "concurrentP95Ms" : 1968.3178,
-  "concurrentMaxMs" : 1988.4402,
-  "batchElapsedMs" : 1989.8215,
+  "concurrentP95Ms" : 2185.8328,
+  "concurrentMaxMs" : 2214.2604,
+  "batchElapsedMs" : 2216.7754,
   "passedAllResponses" : true
 }

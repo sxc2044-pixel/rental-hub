@@ -40,6 +40,7 @@ public class AdminController {
     String image = text(d, "image", 1, 100);
     require(
         image.matches("/images/room-[1-6]\\.svg")
+            || image.matches("/images/home-[1-8]\\.jpg")
             || image.matches("/api/media/[0-9a-f-]{36}\\.(png|jpg)"),
         "请选择房源插图或已上传的图片");
     return new Object[] {
@@ -53,8 +54,29 @@ public class AdminController {
       text(d, "description", 1, 2000),
       image,
       text(d, "owner_name", 1, 40),
-      phone(Map.of("phone", d.getOrDefault("owner_phone", "")))
+      phone(Map.of("phone", d.getOrDefault("owner_phone", ""))),
+      optional(d, "floor_info", 40),
+      optional(d, "orientation", 16),
+      optional(d, "decoration", 20),
+      optional(d, "lease_term", 40),
+      optional(d, "payment_method", 40),
+      optional(d, "transport", 160),
+      availableDate(d)
     };
+  }
+
+  private String optional(Map<String, Object> data, String key, int max) {
+    Object value = data.get(key);
+    if (value == null || value.toString().isBlank()) return "";
+    return text(data, key, 1, max);
+  }
+
+  private LocalDate availableDate(Map<String, Object> data) {
+    String value = optional(data, "available_from", 10);
+    if (value.isBlank()) return null;
+    LocalDate date = LocalDate.parse(value);
+    require(date.getYear() >= 2000 && date.getYear() <= 2100, "入住日期超出支持范围");
+    return date;
   }
 
   @PostMapping("/houses")
@@ -63,8 +85,8 @@ public class AdminController {
     long id =
         db.insert(
             "INSERT INTO"
-                + " t_house(title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone)"
-                + " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                + " t_house(title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone,floor_info,orientation,decoration,lease_term,payment_method,transport,available_from)"
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             houseFields(d));
     db.audit(WebConfig.uid(s), "HOUSE_CREATE", "HOUSE", id, "代理录入，等待审核");
     return Map.of("id", id, "message", "房源已保存，等待审核");
@@ -79,7 +101,7 @@ public class AdminController {
     args.add(id);
     db.update(
         "UPDATE t_house SET"
-            + " title=?,region=?,address=?,rent=?,area=?,layout=?,facilities=?,description=?,image=?,owner_name=?,owner_phone=?,status='PENDING',reviewer_id=NULL,reviewed_at=NULL,review_note=NULL"
+            + " title=?,region=?,address=?,rent=?,area=?,layout=?,facilities=?,description=?,image=?,owner_name=?,owner_phone=?,floor_info=?,orientation=?,decoration=?,lease_term=?,payment_method=?,transport=?,available_from=?,status='PENDING',reviewer_id=NULL,reviewed_at=NULL,review_note=NULL"
             + " WHERE id=?",
         args.toArray());
     db.audit(WebConfig.uid(s), "HOUSE_EDIT", "HOUSE", id, "房源变更后重新审核");

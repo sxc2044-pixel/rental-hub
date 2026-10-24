@@ -71,105 +71,106 @@ public class HouseController {
 <span class="fc" id="L71">    args.add((page - 1) * size);</span>
 <span class="fc" id="L72">    var rows =</span>
 <span class="fc" id="L73">        db.list(</span>
-            &quot;SELECT id,title,region,address,rent,area,layout,facilities,image,created_at FROM&quot;
-                + &quot; t_house&quot;
+            &quot;SELECT&quot;
+                + &quot; id,title,region,address,rent,area,layout,facilities,image,created_at,floor_info,orientation,decoration,lease_term,payment_method,transport,available_from&quot;
+                + &quot; FROM t_house&quot;
                 + where
                 + &quot; ORDER BY &quot;
                 + order
                 + &quot; LIMIT ? OFFSET ?&quot;,
-<span class="fc" id="L80">            args.toArray());</span>
-<span class="fc" id="L81">    return Map.of(&quot;items&quot;, rows, &quot;total&quot;, count, &quot;page&quot;, page, &quot;size&quot;, size);</span>
+<span class="fc" id="L81">            args.toArray());</span>
+<span class="fc" id="L82">    return Map.of(&quot;items&quot;, rows, &quot;total&quot;, count, &quot;page&quot;, page, &quot;size&quot;, size);</span>
   }
 
   @GetMapping(&quot;/houses/{id}&quot;)
   public Map&lt;String, Object&gt; house(@PathVariable long id, HttpSession s) {
-<span class="fc" id="L86">    var h =</span>
-<span class="fc" id="L87">        db.one(</span>
+<span class="fc" id="L87">    var h =</span>
+<span class="fc" id="L88">        db.one(</span>
             &quot;SELECT&quot;
-                + &quot; id,title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone,status,created_at&quot;
+                + &quot; id,title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone,status,created_at,floor_info,orientation,decoration,lease_term,payment_method,transport,available_from&quot;
                 + &quot; FROM t_house WHERE id=? AND status='PUBLISHED'&quot;,
-<span class="fc" id="L91">            id);</span>
-<span class="fc" id="L92">    String phone = h.get(&quot;owner_phone&quot;).toString();</span>
-<span class="fc" id="L93">    h.put(</span>
+<span class="fc" id="L92">            id);</span>
+<span class="fc" id="L93">    String phone = h.get(&quot;owner_phone&quot;).toString();</span>
+<span class="fc" id="L94">    h.put(</span>
         &quot;owner_phone&quot;,
-<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        phone.length() == 11 ? phone.substring(0, 3) + &quot;****&quot; + phone.substring(7) : &quot;联系管理员&quot;);</span>
-<span class="fc" id="L96">    h.put(</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        phone.length() == 11 ? phone.substring(0, 3) + &quot;****&quot; + phone.substring(7) : &quot;联系管理员&quot;);</span>
+<span class="fc" id="L97">    h.put(</span>
         &quot;favorite&quot;,
-<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        s.getAttribute(&quot;user&quot;) != null</span>
-<span class="fc bfc" id="L99" title="All 2 branches covered.">            &amp;&amp; db.count(</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        s.getAttribute(&quot;user&quot;) != null</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            &amp;&amp; db.count(</span>
                     &quot;SELECT COUNT(*) FROM t_favorite WHERE user_id=? AND house_id=?&quot;,
-<span class="fc" id="L101">                    WebConfig.uid(s),</span>
-<span class="fc" id="L102">                    id)</span>
+<span class="fc" id="L102">                    WebConfig.uid(s),</span>
+<span class="fc" id="L103">                    id)</span>
                 &gt; 0);
-<span class="fc" id="L104">    h.put(</span>
+<span class="fc" id="L105">    h.put(</span>
         &quot;comments&quot;,
-<span class="fc" id="L106">        db.list(</span>
+<span class="fc" id="L107">        db.list(</span>
             &quot;SELECT c.id,c.rating,c.content,c.created_at,CONCAT(SUBSTRING(u.name,1,1),'同学') AS&quot;
                 + &quot; author FROM t_comment c JOIN t_user u ON c.user_id=u.id WHERE c.house_id=? AND&quot;
                 + &quot; c.status='APPROVED' ORDER BY c.id DESC&quot;,
-<span class="fc" id="L110">            id));</span>
-<span class="fc" id="L111">    return h;</span>
+<span class="fc" id="L111">            id));</span>
+<span class="fc" id="L112">    return h;</span>
   }
 
   @GetMapping(&quot;/dictionaries&quot;)
   public List&lt;Map&lt;String, Object&gt;&gt; dictionaries() {
-<span class="nc" id="L116">    return db.list(&quot;SELECT * FROM t_dictionary ORDER BY category,id&quot;);</span>
+<span class="nc" id="L117">    return db.list(&quot;SELECT * FROM t_dictionary ORDER BY category,id&quot;);</span>
   }
 
   @GetMapping(&quot;/houses/{id}/availability&quot;)
   public List&lt;Map&lt;String, Object&gt;&gt; availability(
       @PathVariable long id, @RequestParam java.time.LocalDate day) {
-<span class="nc" id="L122">    db.one(&quot;SELECT id FROM t_house WHERE id=? AND status='PUBLISHED'&quot;, id);</span>
-<span class="nc" id="L123">    require(</span>
-<span class="nc bnc" id="L124" title="All 2 branches missed.">        !day.isBefore(java.time.LocalDate.now())</span>
-<span class="nc bnc" id="L125" title="All 2 branches missed.">            &amp;&amp; !day.isAfter(java.time.LocalDate.now().plusDays(30)),</span>
+<span class="nc" id="L123">    db.one(&quot;SELECT id FROM t_house WHERE id=? AND status='PUBLISHED'&quot;, id);</span>
+<span class="nc" id="L124">    require(</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        !day.isBefore(java.time.LocalDate.now())</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            &amp;&amp; !day.isAfter(java.time.LocalDate.now().plusDays(30)),</span>
         &quot;请选择未来30天内的日期&quot;);
-<span class="nc" id="L127">    List&lt;Map&lt;String, Object&gt;&gt; slots = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L128" title="All 2 branches missed.">    for (int hour = 9; hour &lt;= 18; hour++) {</span>
-<span class="nc" id="L129">      var time = day.atTime(hour, 0);</span>
-<span class="nc" id="L130">      boolean available =</span>
-<span class="nc bnc" id="L131" title="All 2 branches missed.">          time.isAfter(java.time.LocalDateTime.now())</span>
-<span class="nc bnc" id="L132" title="All 2 branches missed.">              &amp;&amp; db.count(</span>
+<span class="nc" id="L128">    List&lt;Map&lt;String, Object&gt;&gt; slots = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">    for (int hour = 9; hour &lt;= 18; hour++) {</span>
+<span class="nc" id="L130">      var time = day.atTime(hour, 0);</span>
+<span class="nc" id="L131">      boolean available =</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">          time.isAfter(java.time.LocalDateTime.now())</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">              &amp;&amp; db.count(</span>
                       &quot;SELECT COUNT(*) FROM t_reservation WHERE house_id=? AND visit_time=? AND&quot;
                           + &quot; active_slot IS NOT NULL&quot;,
-<span class="nc" id="L135">                      id,</span>
+<span class="nc" id="L136">                      id,</span>
                       time)
                   == 0;
-<span class="nc" id="L138">      slots.add(Map.of(&quot;hour&quot;, String.format(&quot;%02d&quot;, hour), &quot;available&quot;, available));</span>
+<span class="nc" id="L139">      slots.add(Map.of(&quot;hour&quot;, String.format(&quot;%02d&quot;, hour), &quot;available&quot;, available));</span>
     }
-<span class="nc" id="L140">    return slots;</span>
+<span class="nc" id="L141">    return slots;</span>
   }
 
   @GetMapping(&quot;/notices&quot;)
   public List&lt;Map&lt;String, Object&gt;&gt; notices() {
-<span class="nc" id="L145">    return db.list(&quot;SELECT id,title,content,created_at FROM t_notice ORDER BY id DESC LIMIT 20&quot;);</span>
+<span class="nc" id="L146">    return db.list(&quot;SELECT id,title,content,created_at FROM t_notice ORDER BY id DESC LIMIT 20&quot;);</span>
   }
 
   @GetMapping(&quot;/favorites&quot;)
   public List&lt;Map&lt;String, Object&gt;&gt; favorites(HttpSession s) {
-<span class="nc" id="L150">    WebConfig.student(s);</span>
-<span class="nc" id="L151">    return db.list(</span>
+<span class="nc" id="L151">    WebConfig.student(s);</span>
+<span class="nc" id="L152">    return db.list(</span>
         &quot;SELECT h.id,h.title,h.region,h.rent,h.area,h.layout,h.image,h.status FROM t_favorite f&quot;
             + &quot; JOIN t_house h ON f.house_id=h.id WHERE f.user_id=? ORDER BY f.created_at DESC&quot;,
-<span class="nc" id="L154">        WebConfig.uid(s));</span>
+<span class="nc" id="L155">        WebConfig.uid(s));</span>
   }
 
   @PostMapping(&quot;/favorites/{id}&quot;)
   public Map&lt;String, Object&gt; favorite(@PathVariable long id, HttpSession s) {
-<span class="fc" id="L159">    WebConfig.student(s);</span>
-<span class="fc" id="L160">    db.one(&quot;SELECT id FROM t_house WHERE id=? AND status='PUBLISHED'&quot;, id);</span>
-<span class="fc bfc" id="L161" title="All 2 branches covered.">    if (db.count(</span>
-<span class="fc" id="L162">            &quot;SELECT COUNT(*) FROM t_favorite WHERE user_id=? AND house_id=?&quot;, WebConfig.uid(s), id)</span>
+<span class="fc" id="L160">    WebConfig.student(s);</span>
+<span class="fc" id="L161">    db.one(&quot;SELECT id FROM t_house WHERE id=? AND status='PUBLISHED'&quot;, id);</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">    if (db.count(</span>
+<span class="fc" id="L163">            &quot;SELECT COUNT(*) FROM t_favorite WHERE user_id=? AND house_id=?&quot;, WebConfig.uid(s), id)</span>
         == 0)
-<span class="fc" id="L164">      db.update(&quot;INSERT INTO t_favorite(user_id,house_id) VALUES (?,?)&quot;, WebConfig.uid(s), id);</span>
-<span class="fc" id="L165">    return Map.of(&quot;message&quot;, &quot;已收藏&quot;);</span>
+<span class="fc" id="L165">      db.update(&quot;INSERT INTO t_favorite(user_id,house_id) VALUES (?,?)&quot;, WebConfig.uid(s), id);</span>
+<span class="fc" id="L166">    return Map.of(&quot;message&quot;, &quot;已收藏&quot;);</span>
   }
 
   @DeleteMapping(&quot;/favorites/{id}&quot;)
   public Map&lt;String, Object&gt; unfavorite(@PathVariable long id, HttpSession s) {
-<span class="fc" id="L170">    WebConfig.student(s);</span>
-<span class="fc" id="L171">    db.update(&quot;DELETE FROM t_favorite WHERE user_id=? AND house_id=?&quot;, WebConfig.uid(s), id);</span>
-<span class="fc" id="L172">    return Map.of(&quot;message&quot;, &quot;已取消收藏&quot;);</span>
+<span class="fc" id="L171">    WebConfig.student(s);</span>
+<span class="fc" id="L172">    db.update(&quot;DELETE FROM t_favorite WHERE user_id=? AND house_id=?&quot;, WebConfig.uid(s), id);</span>
+<span class="fc" id="L173">    return Map.of(&quot;message&quot;, &quot;已取消收藏&quot;);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

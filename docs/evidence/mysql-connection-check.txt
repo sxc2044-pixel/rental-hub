@@ -5,5 +5,7 @@ Measured connection establishment: 10.5s; skip_name_resolve=0.
 Fixed JDBC socketTimeout to 30s, connectTimeout to 10s, pool connection timeout to 30s.
 Database kali migrated to rental with 10 table row counts and full-row checksums matching.
 Old kali removed after verified migration; rental_db removed after complete backup and explicit user confirmation.
-HTTP 200; published houses=9; 10 browser checks and dictionary/availability HTTP checks passed on rental.
+Migration-stage check: HTTP 200; published houses=9; 10 browser checks and dictionary/availability HTTP checks passed on rental.
+Frontend redesign final check: HTTP 200; total houses=34; published houses=33; students=25.
+24 new sample students: 2023100514-2023100537; 14 browser checks and 4 responsive viewport checks passed.
 No remote load or long-term availability test claimed.

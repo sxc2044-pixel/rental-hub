@@ -71,8 +71,9 @@ public class HouseController {
     args.add((page - 1) * size);
     var rows =
         db.list(
-            "SELECT id,title,region,address,rent,area,layout,facilities,image,created_at FROM"
-                + " t_house"
+            "SELECT"
+                + " id,title,region,address,rent,area,layout,facilities,image,created_at,floor_info,orientation,decoration,lease_term,payment_method,transport,available_from"
+                + " FROM t_house"
                 + where
                 + " ORDER BY "
                 + order
@@ -86,7 +87,7 @@ public class HouseController {
     var h =
         db.one(
             "SELECT"
-                + " id,title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone,status,created_at"
+                + " id,title,region,address,rent,area,layout,facilities,description,image,owner_name,owner_phone,status,created_at,floor_info,orientation,decoration,lease_term,payment_method,transport,available_from"
                 + " FROM t_house WHERE id=? AND status='PUBLISHED'",
             id);
     String phone = h.get("owner_phone").toString();

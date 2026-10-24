@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS t_house (
  rent DECIMAL(10,2) NOT NULL, area DECIMAL(8,2) NOT NULL, layout VARCHAR(40) NOT NULL,
  facilities VARCHAR(255) NOT NULL, description VARCHAR(2000) NOT NULL,
  image VARCHAR(100) NOT NULL, owner_name VARCHAR(40) NOT NULL, owner_phone VARCHAR(20) NOT NULL,
+ floor_info VARCHAR(40) NOT NULL DEFAULT '', orientation VARCHAR(16) NOT NULL DEFAULT '',
+ decoration VARCHAR(20) NOT NULL DEFAULT '', lease_term VARCHAR(40) NOT NULL DEFAULT '',
+ payment_method VARCHAR(40) NOT NULL DEFAULT '', transport VARCHAR(160) NOT NULL DEFAULT '', available_from DATE,
  status VARCHAR(16) NOT NULL DEFAULT 'PENDING', review_note VARCHAR(255),
  reviewer_id BIGINT, reviewed_at TIMESTAMP NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
  FOREIGN KEY(reviewer_id) REFERENCES t_user(id), CHECK(rent>0), CHECK(area>0)

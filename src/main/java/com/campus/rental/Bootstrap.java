@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@org.springframework.core.annotation.Order(10)
 public class Bootstrap implements CommandLineRunner {
   private final Store db;
   private final boolean demo;
@@ -131,14 +132,20 @@ public class Bootstrap implements CommandLineRunner {
   }
 
   private void refreshSeedLabels() {
-    db.update("UPDATE t_house SET description=? WHERE description=?",
+    db.update(
+        "UPDATE t_house SET description=? WHERE description=?",
         "采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为示例房源，配图仅供参考，实际租赁前请核验房源。",
         "采光通透，生活设施齐全，适合学生学习和生活。附近有公交、便利店与生活市场。此记录为课程演示数据，插图非房屋实拍，实际租赁前请核验房源。");
     db.update("UPDATE t_house SET review_note=? WHERE review_note=?", "示例房源已标注", "课程演示数据已标注");
-    db.update("UPDATE t_notice SET content=? WHERE title=? AND content=?",
+    db.update(
+        "UPDATE t_notice SET content=? WHERE title=? AND content=?",
         "房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。示例房源信息仅供参考，请以实地核验为准。",
-        "欢迎使用校园安居", "房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。当前房源为课程演示数据。");
-    db.update("UPDATE t_audit SET detail=? WHERE action='DEMO_SEED' AND detail=?", "初始化示例数据", "初始化课程演示数据");
+        "欢迎使用校园安居",
+        "房源先审后发。请在看房时核验身份与产权，勿向陌生账号预付费用。当前房源为课程演示数据。");
+    db.update(
+        "UPDATE t_audit SET detail=? WHERE action='DEMO_SEED' AND detail=?",
+        "初始化示例数据",
+        "初始化课程演示数据");
   }
 
   private void ensureIndex(String table, String index, String columns) throws SQLException {

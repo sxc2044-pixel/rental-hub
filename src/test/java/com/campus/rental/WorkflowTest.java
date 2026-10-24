@@ -624,6 +624,38 @@ class WorkflowTest {
   }
 
   @Test
+  void richHouseFieldsPersistAndImagePathsRemainRestricted() throws Exception {
+    var data = houseData();
+    data.put("image", "/images/home-1.jpg");
+    data.put("floor_info", "6/18层");
+    data.put("orientation", "南北");
+    data.put("decoration", "精装修");
+    data.put("lease_term", "一年起租");
+    data.put("payment_method", "押一付一");
+    data.put("transport", "地铁站步行约8分钟");
+    data.put("available_from", LocalDate.now().plusDays(2).toString());
+    var created = call(admin, "POST", "/api/admin/houses", data);
+    ok(created);
+    long id = json(created).get("id").asLong();
+    ok(
+        call(
+            admin,
+            "PUT",
+            "/api/admin/houses/" + id + "/review",
+            Map.of("status", "PUBLISHED", "note", "补充信息核验")));
+    var result = call(admin, "GET", "/api/houses/" + id, null);
+    ok(result);
+    assertEquals("6/18层", json(result).get("floor_info").asText());
+    assertEquals("押一付一", json(result).get("payment_method").asText());
+    assertEquals("/images/home-1.jpg", json(result).get("image").asText());
+    data.put("image", "https://example.com/untrusted.jpg");
+    assertEquals(400, call(admin, "POST", "/api/admin/houses", data).getResponse().getStatus());
+    data.put("image", "/images/home-1.jpg");
+    data.put("available_from", "2026-02-31");
+    assertEquals(400, call(admin, "POST", "/api/admin/houses", data).getResponse().getStatus());
+  }
+
+  @Test
   void backupContainsDatabaseAndPrivateMaterials() throws Exception {
     var r = call(admin, "POST", "/api/admin/backups", null);
     ok(r);
