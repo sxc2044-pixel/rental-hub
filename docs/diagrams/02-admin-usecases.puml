@@ -1,0 +1,32 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam defaultFontName Microsoft YaHei
+skinparam monochrome true
+skinparam shadowing false
+actor 管理员 as Admin
+rectangle 平台运营管理 {
+ usecase "代理录入与维护房源\nFR-10 FR-12" as House
+ usecase "房源审核\nFR-11" as Review
+ usecase "记录审核人时间与意见" as Audit
+ usecase "认证审核与账号管理\nFR-13" as Users
+ usecase "发布修改删除公告\nFR-14" as Notice
+ usecase "确认与跟踪看房预约\nFR-15" as Reservation
+ usecase "维护签约状态\nFR-08" as Contract
+ usecase "咨询回复与评价审核\nFR-07 FR-09" as Feedback
+ usecase "按区域户型日期统计\nFR-16" as Stats
+ usecase "区域户型租金字典维护\nFR-17" as Dictionary
+}
+Admin --> House
+Admin --> Review
+Admin --> Users
+Admin --> Notice
+Admin --> Reservation
+Admin --> Contract
+Admin --> Feedback
+Admin --> Stats
+Admin --> Dictionary
+Review ..> Audit : <<include>>
+Users ..> Audit : <<include>>
+Feedback ..> Audit : <<include>>
+@enduml

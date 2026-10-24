@@ -1,0 +1,32 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName Microsoft YaHei
+skinparam monochrome true
+skinparam shadowing false
+rectangle "Windows 本机" {
+ component "浏览器中文界面\nHTML CSS JavaScript" as Browser
+ component "Spring MVC 控制器\nAuth House Student Admin Upload" as Controllers
+ component "访问拦截器 WebConfig\n会话 角色 版本 CSRF" as Guard
+ component "预约业务 ReservationService\n事务 状态机 唯一占位" as Service
+ component "规则校验 Rules" as Rules
+ component "参数化数据访问 Store\nJdbcTemplate" as Store
+ database "本机 H2 文件数据库\n演示模式" as H2
+ folder "本机 data/uploads\n房源图片 认证材料" as Files
+}
+node "Kali 虚拟机" {
+ database "MySQL 8 / MariaDB\n数据库 kali" as MySQL
+}
+Browser --> Guard : HTTP JSON / 同源
+Guard --> Controllers
+Controllers --> Rules
+Controllers --> Service
+Controllers --> Store
+Service --> Store
+Store --> H2 : demo profile
+Store --> MySQL : mysql / mariadb profile
+Controllers --> Files : 图片读写
+note bottom of MySQL
+本次交付保留连接配置
+按用户要求暂缓远程联调
+end note
+@enduml

@@ -1,0 +1,59 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName Microsoft YaHei
+skinparam monochrome true
+skinparam shadowing false
+interface CommandLineRunner {
+ +run(args)
+}
+class Bootstrap {
+ -db : Store
+ -demo : boolean
+ +run(args)
+ -ensureIndex(table,index,columns)
+}
+class StudentController {
+ -db : Store
+ -service : ReservationService
+ +reserve(data,session)
+ +cancel(id,session)
+ +contract(data,session)
+ +comment(data,session)
+}
+class AdminController {
+ -db : Store
+ -reservations : ReservationService
+ +reviewHouse(id,data,session)
+ +reservationStatus(id,data,session)
+ +contractStatus(id,data,session)
+ +stats(region,layout,from,to)
+}
+class ReservationService {
+ -db : Store
+ +create(user,house,time,phone) : long
+ +transition(actor,id,target,admin) : void
+}
+class Store {
+ -jdbc : JdbcTemplate
+ +one(sql,args) : Map
+ +list(sql,args) : List
+ +insert(sql,args) : long
+ +update(sql,args) : int
+ +audit(actor,action,entity,id,detail)
+}
+class Rules <<utility>> {
+ +require(ok,message)
+ +visit(value) : LocalDateTime
+ +reservationTransition(current,next,admin)
+ +password(data) : String
+}
+Bootstrap ..|> CommandLineRunner
+Bootstrap --> Store
+StudentController o--> ReservationService : 注入共享业务对象
+AdminController o--> ReservationService
+ReservationService --> Store
+StudentController --> Store
+AdminController --> Store
+ReservationService ..> Rules
+StudentController ..> Rules
+@enduml

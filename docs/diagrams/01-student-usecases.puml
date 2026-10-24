@@ -1,0 +1,34 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam defaultFontName Microsoft YaHei
+skinparam monochrome true
+skinparam shadowing false
+actor 学生 as Student
+rectangle 学生租房服务 {
+ usecase "注册登录与密码恢复\nFR-01" as Auth
+ usecase "维护资料与学生认证\nFR-02" as Profile
+ usecase "浏览筛选与收藏\nFR-03 至 FR-05" as Browse
+ usecase "提交看房预约\nFR-06" as Reserve
+ usecase "校验房源状态与时段" as Validate
+ usecase "取消待确认预约" as Cancel
+ usecase "在线咨询\nFR-07" as Message
+ usecase "查看模板与提交租赁意向\nFR-08" as Contract
+ usecase "提交评价\nFR-09" as Review
+ usecase "校验看房或签约资格" as Eligibility
+}
+Student --> Auth
+Student --> Profile
+Student --> Browse
+Student --> Reserve
+Student --> Cancel
+Student --> Message
+Student --> Contract
+Student --> Review
+Reserve ..> Validate : <<include>>
+Review ..> Eligibility : <<include>>
+Contract ..> Eligibility : <<include>>
+note bottom of Cancel
+仅允许取消本人的待确认预约
+end note
+@enduml

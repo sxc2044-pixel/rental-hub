@@ -1,0 +1,11 @@
+/target/
+/data/
+/logs/
+/config/local.ps1
+/config/application-local.properties
+*.log
+.idea/
+*.iml
+/.tools/
+/dist/
+/docs/evidence/project-history.bundle

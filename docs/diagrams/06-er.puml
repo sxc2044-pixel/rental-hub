@@ -1,0 +1,58 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 16
+skinparam monochrome true
+skinparam shadowing false
+entity t_user {
+ * id : BIGINT <<PK>>
+ --
+ account : VARCHAR(32) <<UK>>
+ password_hash : VARCHAR(100)
+ recovery_hash : VARCHAR(100)
+ role : VARCHAR(16)
+ certification : VARCHAR(16)
+ session_version : INT
+}
+entity t_house {
+ * id : BIGINT <<PK>>
+ --
+ title : VARCHAR(100)
+ region layout : VARCHAR(40)
+ rent : DECIMAL(10,2)
+ area : DECIMAL(8,2)
+ status : VARCHAR(16)
+ reviewer_id : BIGINT <<FK>>
+}
+entity t_reservation {
+ * id : BIGINT <<PK>>
+ --
+ user_id house_id : BIGINT <<FK>>
+ visit_time : TIMESTAMP
+ active_slot : VARCHAR(80) <<UK nullable>>
+ status : VARCHAR(16)
+}
+entity t_contract {
+ * id : BIGINT <<PK>>
+ --
+ user_id house_id : BIGINT <<FK>>
+ rent : DECIMAL(10,2)
+ start_date end_date : DATE
+ status : VARCHAR(16)
+}
+entity t_comment {
+ * id : BIGINT <<PK>>
+ --
+ user_id house_id : BIGINT <<FK UK pair>>
+ rating : INT
+ content : VARCHAR(1000)
+ status : VARCHAR(16)
+}
+t_user ||--o{ t_reservation
+t_house ||--o{ t_reservation
+t_user ||--o{ t_contract
+t_house ||--o{ t_contract
+t_user ||--o{ t_comment
+t_house ||--o{ t_comment
+t_user |o--o{ t_house : 审核
+@enduml
