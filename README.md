@@ -191,12 +191,8 @@ SQL初始化不删除现有表，不负责迁移不兼容的历史结构，连�
 ```powershell
 mvn -B -ntp verify
 ```
-
-<<<<<<< HEAD
-自动化测试共75项，包含规则、业务、目录、性能及7项房东集成测试。签署用例验证同意项、姓名、密码、正文摘要、重复签署和数据归属。基线用例包括：35项规则用例、29项Web业务用例、3项示例目录用例及1项隔离性能测试。Surefire输出到 `target/surefire-reports`，JaCoCo覆盖率输出到 `target/site/jacoco`。报告中记录实际行与分支覆盖率；没有设定未经课程提供的“达标”阈值。
 =======
 本次68项自动化检查通过：35项规则用例、29项Web业务用例、3项示例目录用例及1项隔离性能测试。Surefire输出到 `target/surefire-reports`，JaCoCo覆盖率输出到 `target/site/jacoco`。
->>>>>>> b9a603270f46f6b13588a1f128e387e88e4abeb3
 
 PerformanceTest在独立H2内存库创建10万条房源，以100个并发HTTP请求测量指定筛选查询，结果写入 `docs/evidence/performance.json`。不会污染演示库或远程数据库。该结果不包括完整浏览器加载、Kali网络、真实100人操作序列及长期可用性。
 
@@ -227,9 +223,6 @@ demo运行时每天北京时间02:00创建数据库及上传图片备份，管�
 ## 参考与许可
 
 框架选型参考 [Spring Boot官方文档](https://docs.spring.io/spring-boot/3.5/system-requirements.html) 和 [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) 的分层示例。没有将PetClinic或其他仓库业务代码复制到本工程。Spring、H2、MySQL驱动、MariaDB驱动及测试库等依赖各自保留其许可证，信息随Maven制品提供，运行JAR的嵌套依赖中保留原始META-INF。项目未默认替用户选择原创代码的公开授权协议。
-
-<<<<<<< HEAD
-课程实验中的协作在独立本地仓库真实模拟，含冲突、解决、合并和向本地裸仓库推送；bundle可复查，未向GitHub发布或创建Issue。需求变更、接口和缺陷说明均在docs中。
 
 ## 界面与合同依据
 
