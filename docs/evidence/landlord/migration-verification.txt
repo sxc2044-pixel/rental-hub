@@ -1,0 +1,11 @@
+Original-column preservation verification
+t_audit rows=39 SHA256=MATCH
+t_comment rows=0 SHA256=MATCH
+t_contract rows=1 SHA256=MATCH
+t_dictionary rows=11 SHA256=MATCH
+t_favorite rows=3 SHA256=MATCH
+t_house rows=34 SHA256=MATCH
+t_message rows=1 SHA256=MATCH
+t_notice rows=1 SHA256=MATCH
+t_reservation rows=7 SHA256=MATCH
+t_user rows=26 SHA256=MATCH

@@ -1,0 +1,17 @@
+{
+  "executedAt" : "2026-11-04T22:38:44.588685100+08:00",
+  "database" : "H2 in-memory / MySQL mode",
+  "scope" : "仅本机HTTP接口与隔离内存数据库，非Kali MySQL或完整浏览器加载测试",
+  "baselineRows" : 1010,
+  "largeRows" : 100000,
+  "serialRequestsPerGroup" : 20,
+  "baselineP95Ms" : 3.9183,
+  "largeP95Ms" : 3.5673,
+  "concurrentUsers" : 100,
+  "concurrentRequests" : 100,
+  "successfulRequests" : 100,
+  "concurrentP95Ms" : 2220.8138,
+  "concurrentMaxMs" : 2238.0574,
+  "batchElapsedMs" : 2243.1683,
+  "passedAllResponses" : true
+}

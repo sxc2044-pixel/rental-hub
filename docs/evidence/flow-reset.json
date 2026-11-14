@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-11-04",
+  "database": "Kali rental",
+  "retainedTables": 16,
+  "roleCounts": {
+    "ADMIN": 1,
+    "LANDLORD": 2,
+    "STUDENT": 25
+  },
+  "houseCount": 35,
+  "housesWithoutLandlord": 0,
+  "createdLandlordAccount": "13800138000",
+  "existingAccountsPreserved": 27,
+  "existingAccountFieldsUnchanged": true,
+  "houseFieldsExceptOwnerIdUnchanged": true,
+  "countsAfterCleanup": {
+    "t_application": 0,
+    "t_audit": 0,
+    "t_bill": 0,
+    "t_chat": 0,
+    "t_comment": 0,
+    "t_contract": 0,
+    "t_dictionary": 11,
+    "t_favorite": 0,
+    "t_house": 35,
+    "t_media": 0,
+    "t_message": 0,
+    "t_moveout": 0,
+    "t_notice": 0,
+    "t_repair": 0,
+    "t_reservation": 0,
+    "t_user": 28
+  },
+  "sampleSeeding": false,
+  "passwordsVerifiedWithBCrypt": true,
+  "privateBackupExcludedFromSourceArchive": true,
+  "applicationRestartVerified": true,
+  "businessTablesStillEmptyAfterRestart": true,
+  "publicHouseDetailOwnerVerified": true
+}

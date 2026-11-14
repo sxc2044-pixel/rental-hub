@@ -1,0 +1,11 @@
+{
+  "executedAt": "2026-11-03T23:05:12.931472+08:00",
+  "database": "192.168.93.128:3306/rental",
+  "profile": "mysql (real Kali MariaDB)",
+  "homeStatus": 200,
+  "publishedHouses": 34,
+  "browserChecks": 23,
+  "pageErrors": 0,
+  "deployedLocalJar": "dist/rental-hub-1.0.0.jar",
+  "jarIncludedInDelivery": false
+}

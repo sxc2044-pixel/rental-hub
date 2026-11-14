@@ -1,0 +1,41 @@
+{
+  "executedAt": "2026-11-03T23:05:12.931472+08:00",
+  "defaultProfile": "mysql",
+  "actualServer": "11.4.5-MariaDB-1",
+  "database": "192.168.93.128:3306/rental",
+  "httpStatus": 200,
+  "publishedHouses": 34,
+  "unitAndIntegrationTests": 75,
+  "realKaliBrowserChecks": 23,
+  "migration": "10 table row counts and full-row SHA256 matched before removal of old schemas",
+  "removedOldSchemas": [
+    "kali",
+    "rental_db"
+  ],
+  "rentalDbRemoval": "Explicitly confirmed by user after full SQL backup",
+  "privateBackupsIncludedInZip": false,
+  "reportPages": 67,
+  "reportSha256": "3b233e0a5dc16e87957b8b56f54698055ca3297ac3c1cd75b709030a6f3db674",
+  "remoteLoadTest": "Not performed; performance evidence is isolated H2 only",
+  "totalHouses": 35,
+  "students": 25,
+  "newStudentAccounts": "2023100514-2023100537",
+  "localReferencePhotos": 8,
+  "facilityIcons": 12,
+  "newSampleDataProtection": "Persistent one-time marker; existing accounts and user edits preserved",
+  "landlords": 1,
+  "users": 27,
+  "browserChecksBySuite": {
+    "regression": 14,
+    "landlord": 9
+  },
+  "reportTemplate": "软件工程-实验报告模板.doc",
+  "deliverables": [
+    "租房信息管理系统-完整源代码.zip",
+    "软件工程-实验报告模板.docx"
+  ],
+  "sourceOnly": true,
+  "compiledArtifactsIncludedInZip": false,
+  "privateConfigurationIncludedInZip": false,
+  "landlordMigration": "6 new tables and 5 fields; original 10 tables and original-column full-row SHA256 matched before browser sample creation"
+}

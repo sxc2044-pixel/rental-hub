@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-03",
+  "applicationTests": 75,
+  "landlordTests": 7,
+  "browserNewChecks": 9,
+  "browserRegressionChecks": 14,
+  "database": "Kali MariaDB 11.4.5 / rental",
+  "databaseUpgrade": "10 original tables, original columns full-row SHA256 all matched before browser fixtures",
+  "backupPrivate": true,
+  "coverage": {
+    "INSTRUCTION": 87.51,
+    "BRANCH": 62.54,
+    "LINE": 86.58,
+    "COMPLEXITY": 53.81,
+    "METHOD": 80.0,
+    "CLASS": 100.0
+  },
+  "landlordAccount": "19912807032",
+  "chatSynchronizationSeconds": 2
+}

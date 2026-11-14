@@ -1,0 +1,39 @@
+@startuml
+skinparam defaultFontName Microsoft YaHei
+skinparam monochrome true
+skinparam shadowing false
+actor 学生
+participant "浏览器 app.js" as UI
+participant WebConfig as Guard
+participant StudentController as API
+participant ReservationService as Service
+participant Store
+database 数据库 as DB
+学生 -> UI : 选择日期时段并提交手机号
+UI -> Guard : POST /api/reservations\nSession Cookie + CSRF
+Guard -> Guard : 验证登录 学生角色及会话版本
+Guard -> API : 放行
+API -> API : 校验手机号与未来30天整点
+API -> Service : create(uid,house,time,phone)
+activate Service
+group 同一数据库事务
+ Service -> Store : 查询房源 FOR UPDATE
+ Store -> DB : 锁定房源并读取状态
+ DB --> Service : PUBLISHED
+ Service -> Store : INSERT reservation\nactive_slot = houseId + time
+ Store -> DB : 写入唯一占位
+ alt 时段未占用
+  DB --> Store : 新预约ID
+  Service -> Store : 写入操作审计
+  Store -> DB : INSERT audit
+  DB --> Service : 提交事务
+  Service --> API : 预约ID
+  API --> UI : 200 待确认
+ else 唯一键冲突
+  DB --> Service : 唯一约束异常 回滚事务
+  Service --> UI : 409 请重新选择时段
+ end
+end
+deactivate Service
+UI --> 学生 : 显示结果
+@enduml

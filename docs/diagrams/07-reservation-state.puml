@@ -1,0 +1,20 @@
+@startuml
+skinparam defaultFontName Microsoft YaHei
+skinparam monochrome true
+skinparam shadowing false
+[*] --> 待确认 : 学生提交预约
+待确认 --> 已确认 : 管理员确认
+待确认 --> 已取消 : 学生本人或管理员取消
+已确认 --> 已完成 : 管理员完成看房
+已确认 --> 已取消 : 管理员取消
+已完成 --> [*]
+已取消 --> [*]
+note right of 已取消
+active_slot 设为 NULL
+释放原房源时段
+end note
+note right of 已完成
+保留占位与历史
+允许评价和租赁意向
+end note
+@enduml

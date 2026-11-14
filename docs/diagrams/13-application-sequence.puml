@@ -1,0 +1,32 @@
+@startuml
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 17
+skinparam monochrome true
+skinparam shadowing false
+actor 房东
+participant RentalController as API
+participant Store as DAO
+database rental as DB
+房东 -> API : PUT /applications/{id}/review
+activate API
+API -> API : 验证会话角色LANDLORD
+API -> DAO : 按owner_id查询并锁定房源
+DAO -> DB : SELECT ... FOR UPDATE
+API -> DAO : 锁定申请并检查PENDING
+API -> DAO : 检查DRAFT / SIGNED租期重叠
+alt 通过且没有冲突
+ API -> DAO : INSERT合同DRAFT和条款快照
+ API -> DAO : UPDATE申请APPROVED和contract_id
+ API -> DAO : INSERT审批审计
+ API -> DB : 提交同一事务
+ API --> 房东 : 审批成功，等待双方签署
+else 驳回
+ API -> DAO : UPDATE REJECTED及意见
+ API -> DB : 提交事务
+ API --> 房东 : 已保存驳回结论
+else 越权、重复审批或租期冲突
+ API -> DB : 回滚事务
+ API --> 房东 : 返回错误，保持原数据
+end
+deactivate API
+@enduml

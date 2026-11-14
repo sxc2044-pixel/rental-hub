@@ -1,0 +1,34 @@
+{
+  "executedAt": "2026-10-24T13:28:53.886Z",
+  "results": [
+    {
+      "width": 320,
+      "homepage": "PASS",
+      "detail": "PASS",
+      "facilities": 12,
+      "reducedMotion": "PASS"
+    },
+    {
+      "width": 390,
+      "homepage": "PASS",
+      "detail": "PASS",
+      "facilities": 12,
+      "reducedMotion": "PASS"
+    },
+    {
+      "width": 768,
+      "homepage": "PASS",
+      "detail": "PASS",
+      "facilities": 12,
+      "reducedMotion": "PASS"
+    },
+    {
+      "width": 1440,
+      "homepage": "PASS",
+      "detail": "PASS",
+      "facilities": 12,
+      "reducedMotion": "PASS"
+    }
+  ],
+  "pageErrors": []
+}

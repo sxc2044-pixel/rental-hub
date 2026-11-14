@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Rules.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">校园安居</a> &gt; <a href="index.source.html" class="el_package">com.campus.rental</a> &gt; <span class="el_source">Rules.java</span></div><h1>Rules.java</h1><pre class="source lang-java linenums">package com.campus.rental;
+
+import java.math.BigDecimal;
+import java.time.*;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+public final class Rules {
+  private Rules() {}
+
+  public static void require(boolean ok, String message) {
+<span class="fc bfc" id="L13" title="All 2 branches covered.">    if (!ok) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);</span>
+<span class="fc" id="L14">  }</span>
+
+  public static String text(Map&lt;String, Object&gt; data, String key, int min, int max) {
+<span class="fc" id="L17">    Object raw = data.get(key);</span>
+<span class="pc bpc" id="L18" title="1 of 2 branches missed.">    require(raw != null, &quot;缺少字段 &quot; + key);</span>
+<span class="fc" id="L19">    String source = String.valueOf(raw);</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">    require(!source.contains(&quot;\u0000&quot;), &quot;文本包含非法字符&quot;);</span>
+<span class="fc" id="L21">    String s = source.trim();</span>
+<span class="fc bfc" id="L22" title="All 4 branches covered.">    require(s.length() &gt;= min &amp;&amp; s.length() &lt;= max, key + &quot; 长度应为 &quot; + min + &quot; 至 &quot; + max + &quot; 字符&quot;);</span>
+<span class="pc bpc" id="L23" title="1 of 2 branches missed.">    require(!s.contains(&quot;\u0000&quot;), &quot;文本包含非法字符&quot;);</span>
+<span class="fc" id="L24">    return s;</span>
+  }
+
+  public static String password(Map&lt;String, Object&gt; data) {
+<span class="fc" id="L28">    String s = text(data, &quot;password&quot;, 6, 72);</span>
+<span class="fc bfc" id="L29" title="All 4 branches covered.">    require(s.matches(&quot;.*[A-Za-z].*&quot;) &amp;&amp; s.matches(&quot;.*[0-9].*&quot;), &quot;密码须包含字母与数字&quot;);</span>
+<span class="fc" id="L30">    require(</span>
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">        s.getBytes(java.nio.charset.StandardCharsets.UTF_8).length &lt;= 72, &quot;密码 UTF-8 长度不能超过72字节&quot;);</span>
+<span class="fc" id="L32">    return s;</span>
+  }
+
+  public static String phone(Map&lt;String, Object&gt; data) {
+<span class="fc" id="L36">    String s = text(data, &quot;phone&quot;, 11, 11);</span>
+<span class="fc" id="L37">    require(s.matches(&quot;1[3-9][0-9]{9}&quot;), &quot;请输入有效的11位手机号&quot;);</span>
+<span class="fc" id="L38">    return s;</span>
+  }
+
+  public static long number(Map&lt;String, Object&gt; data, String key) {
+    try {
+<span class="fc" id="L43">      long n = Long.parseLong(String.valueOf(data.get(key)));</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">      require(n &gt; 0, &quot;编号无效&quot;);</span>
+<span class="fc" id="L45">      return n;</span>
+<span class="nc" id="L46">    } catch (NumberFormatException ex) {</span>
+<span class="nc" id="L47">      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, key + &quot; 必须是正整数&quot;);</span>
+    }
+  }
+
+  public static BigDecimal decimal(Map&lt;String, Object&gt; data, String key, BigDecimal max) {
+    try {
+<span class="fc" id="L53">      BigDecimal n = new BigDecimal(String.valueOf(data.get(key)));</span>
+<span class="fc bfc" id="L54" title="All 6 branches covered.">      require(n.signum() &gt; 0 &amp;&amp; n.compareTo(max) &lt;= 0 &amp;&amp; n.scale() &lt;= 2, key + &quot; 范围或精度不正确&quot;);</span>
+<span class="fc" id="L55">      return n;</span>
+<span class="fc" id="L56">    } catch (NumberFormatException ex) {</span>
+<span class="fc" id="L57">      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, key + &quot; 必须是有效数值&quot;);</span>
+    }
+  }
+
+  public static LocalDateTime visit(String value) {
+    try {
+<span class="fc" id="L63">      var t = LocalDateTime.parse(value);</span>
+<span class="fc" id="L64">      require(</span>
+<span class="fc bfc" id="L65" title="All 4 branches covered.">          t.isAfter(LocalDateTime.now()) &amp;&amp; t.isBefore(LocalDateTime.now().plusDays(31)),</span>
+          &quot;预约须在未来30天内&quot;);
+<span class="fc" id="L67">      require(</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">          t.getMinute() == 0</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">              &amp;&amp; t.getSecond() == 0</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">              &amp;&amp; t.getNano() == 0</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">              &amp;&amp; t.getHour() &gt;= 9</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">              &amp;&amp; t.getHour() &lt;= 18,</span>
+          &quot;预约时段为9至18点，每小时一档&quot;);
+<span class="fc" id="L74">      return t;</span>
+<span class="fc" id="L75">    } catch (java.time.format.DateTimeParseException ex) {</span>
+<span class="fc" id="L76">      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;日期格式错误&quot;);</span>
+    }
+  }
+
+  public static void reservationTransition(String current, String next, boolean admin) {
+    boolean valid =
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        admin</span>
+<span class="pc bpc" id="L83" title="1 of 6 branches missed.">            ? (current.equals(&quot;PENDING&quot;) &amp;&amp; (next.equals(&quot;CONFIRMED&quot;) || next.equals(&quot;CANCELLED&quot;)))</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                || (current.equals(&quot;CONFIRMED&quot;)</span>
+<span class="pc bpc" id="L85" title="1 of 4 branches missed.">                    &amp;&amp; (next.equals(&quot;COMPLETED&quot;) || next.equals(&quot;CANCELLED&quot;)))</span>
+<span class="fc bfc" id="L86" title="All 4 branches covered.">            : current.equals(&quot;PENDING&quot;) &amp;&amp; next.equals(&quot;CANCELLED&quot;);</span>
+<span class="fc" id="L87">    require(valid, &quot;当前预约状态不允许此操作&quot;);</span>
+<span class="fc" id="L88">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

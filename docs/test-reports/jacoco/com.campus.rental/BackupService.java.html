@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BackupService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">校园安居</a> &gt; <a href="index.source.html" class="el_package">com.campus.rental</a> &gt; <span class="el_source">BackupService.java</span></div><h1>BackupService.java</h1><pre class="source lang-java linenums">package com.campus.rental;
+
+import static com.campus.rental.Rules.*;
+
+import jakarta.servlet.http.HttpSession;
+import java.io.*;
+import java.nio.file.*;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.zip.*;
+import org.slf4j.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
+
+/** 演示数据库在线一致性快照；远程MySQL使用交付的mysqldump脚本。 */
+@Service
+@EnableScheduling
+public class BackupService {
+<span class="fc" id="L22">  private static final Logger LOG = LoggerFactory.getLogger(BackupService.class);</span>
+  private final Store db;
+  private final Path uploads;
+
+<span class="fc" id="L26">  public BackupService(Store db, @Value(&quot;${rental.upload-dir}&quot;) String uploads) {</span>
+<span class="fc" id="L27">    this.db = db;</span>
+<span class="fc" id="L28">    this.uploads = Path.of(uploads).toAbsolutePath().normalize();</span>
+<span class="fc" id="L29">  }</span>
+
+  public synchronized String create() throws Exception {
+<span class="fc" id="L32">    try (var c = db.dataSource().getConnection()) {</span>
+<span class="fc" id="L33">      require(</span>
+<span class="fc" id="L34">          c.getMetaData().getDatabaseProductName().equals(&quot;H2&quot;),</span>
+          &quot;MySQL请在Kali运行 scripts/backup-mysql.sh 完成每日备份&quot;);
+    }
+<span class="fc" id="L37">    Path dir = Path.of(&quot;data/backups&quot;).toAbsolutePath().normalize();</span>
+<span class="fc" id="L38">    Files.createDirectories(dir);</span>
+<span class="fc" id="L39">    String suffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern(&quot;yyyyMMdd-HHmmss-SSS&quot;));</span>
+<span class="fc" id="L40">    Path database = dir.resolve(&quot;database-&quot; + suffix + &quot;.zip&quot;),</span>
+<span class="fc" id="L41">        archive = dir.resolve(&quot;rental-backup-&quot; + suffix + &quot;.zip&quot;);</span>
+<span class="fc" id="L42">    db.update(&quot;BACKUP TO '&quot; + database.toString().replace(&quot;'&quot;, &quot;''&quot;) + &quot;'&quot;);</span>
+<span class="fc" id="L43">    try (var out = new ZipOutputStream(Files.newOutputStream(archive))) {</span>
+<span class="fc" id="L44">      out.putNextEntry(new ZipEntry(&quot;database.zip&quot;));</span>
+<span class="fc" id="L45">      Files.copy(database, out);</span>
+<span class="fc" id="L46">      out.closeEntry();</span>
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">      if (Files.exists(uploads))</span>
+<span class="fc" id="L48">        try (var paths = Files.walk(uploads)) {</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">          for (Path file : paths.filter(Files::isRegularFile).toList()) {</span>
+<span class="fc" id="L50">            out.putNextEntry(</span>
+<span class="fc" id="L51">                new ZipEntry(&quot;uploads/&quot; + uploads.relativize(file).toString().replace('\\', '/')));</span>
+<span class="fc" id="L52">            Files.copy(file, out);</span>
+<span class="fc" id="L53">            out.closeEntry();</span>
+<span class="fc" id="L54">          }</span>
+        }
+    } finally {
+<span class="fc" id="L57">      Files.deleteIfExists(database);</span>
+    }
+<span class="fc" id="L59">    return archive.toString();</span>
+  }
+
+  @Scheduled(cron = &quot;0 0 2 * * *&quot;, zone = &quot;Asia/Shanghai&quot;)
+  public void daily() {
+<span class="nc" id="L64">    try (var c = db.dataSource().getConnection()) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">      if (c.getMetaData().getDatabaseProductName().equals(&quot;H2&quot;)) {</span>
+<span class="nc" id="L66">        create();</span>
+<span class="nc" id="L67">        LOG.info(&quot;每日本机数据备份完成&quot;);</span>
+      }
+<span class="nc" id="L69">    } catch (Exception e) {</span>
+<span class="nc" id="L70">      LOG.error(&quot;每日备份失败，类型={}&quot;, e.getClass().getSimpleName());</span>
+<span class="nc" id="L71">    }</span>
+<span class="nc" id="L72">  }</span>
+
+  @RestController
+  @RequestMapping(&quot;/api/admin/backups&quot;)
+  public static class BackupController {
+    private final BackupService backup;
+    private final Store db;
+
+<span class="fc" id="L80">    public BackupController(BackupService backup, Store db) {</span>
+<span class="fc" id="L81">      this.backup = backup;</span>
+<span class="fc" id="L82">      this.db = db;</span>
+<span class="fc" id="L83">    }</span>
+
+    @PostMapping
+    public Map&lt;String, Object&gt; create(HttpSession s) throws Exception {
+<span class="fc" id="L87">      String file = backup.create();</span>
+<span class="fc" id="L88">      db.audit(WebConfig.uid(s), &quot;BACKUP_CREATE&quot;, &quot;SYSTEM&quot;, 1, &quot;创建数据库及上传文件备份&quot;);</span>
+<span class="fc" id="L89">      return Map.of(</span>
+<span class="fc" id="L90">          &quot;message&quot;, &quot;备份完成，文件位于项目 data/backups 目录&quot;, &quot;file&quot;, Path.of(file).getFileName().toString());</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

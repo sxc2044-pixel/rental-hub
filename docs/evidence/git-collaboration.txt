@@ -1,0 +1,29 @@
+Local simulation only; origin is a local bare repository, not GitHub.
+
+Conflict output:
+Auto-merging workflow.txt
+CONFLICT (content): Merge conflict in workflow.txt
+Automatic merge failed; fix conflicts and then commit the result.
+
+Conflict status:
+UU workflow.txt
+
+Resolved content:
+reservation_status=PENDING -> CONFIRMED -> COMPLETED
+review_status=PENDING -> APPROVED or REJECTED
+
+Branch graph:
+*   6590c95 (HEAD -> master) release: finish local collaboration simulation
+|\  
+| *   999b0db (dev) fix: distinguish reservation and review state machines
+| |\  
+| | * 9f6e1f2 (feature/review) feat: describe reviewed reservation state
+| |/  
+|/|   
+| * 278a48e merge: integrate reservation workflow
+|/| 
+| * 259a6eb (feature/reservation) feat: add confirmed reservation state
+|/  
+* bbaa996 chore: initialize local collaboration exercise
+
+Final status:

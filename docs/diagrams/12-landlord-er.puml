@@ -1,0 +1,62 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 16
+skinparam monochrome true
+skinparam shadowing false
+entity t_user {
+ * id : BIGINT <<PK>>
+ role : STUDENT / LANDLORD / ADMIN
+ avatar : VARCHAR
+}
+entity t_house {
+ * id : BIGINT <<PK>>
+ owner_id : BIGINT <<FK>>
+ status : VARCHAR
+}
+entity t_application {
+ * id : BIGINT <<PK>>
+ house_id / user_id / landlord_id : FK
+ contract_id : UNIQUE FK
+ start_date / end_date / status
+}
+entity t_contract {
+ * id : BIGINT <<PK>>
+ house_id / user_id / landlord_id : FK
+ tenant_signed / landlord_signed : BOOLEAN
+ rent / terms : 快照
+}
+entity t_bill {
+ * id : BIGINT <<PK>>
+ contract_id : FK
+ bill_month : DATE
+ UNIQUE(contract_id,bill_month)
+ amount / status / paid_at / deleted
+}
+entity t_repair {
+ * id : BIGINT <<PK>>
+ contract_id : FK
+ worker / cost / responsibility / status
+}
+entity t_moveout {
+ * id : BIGINT <<PK>>
+ contract_id : FK
+ reason / review_note / status
+}
+entity t_chat {
+ * id : BIGINT <<PK>>
+ sender_id / receiver_id : FK
+ house_id : FK 可空
+ type / content / read_at
+}
+t_user ||--o{ t_house : 房东归属
+t_house ||--o{ t_application
+t_user ||--o{ t_application : 申请人与房东
+t_application |o--o| t_contract : 批准后生成
+t_house ||--o{ t_contract
+t_contract ||--o{ t_bill
+t_contract ||--o{ t_repair
+t_contract ||--o{ t_moveout
+t_user ||--o{ t_chat : 发件人与收件人
+t_house |o--o{ t_chat : 房源卡片
+@enduml

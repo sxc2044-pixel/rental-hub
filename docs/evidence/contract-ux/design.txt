@@ -1,0 +1,4 @@
+PASS responsive 320
+PASS responsive 390
+PASS responsive 768
+PASS responsive 1440

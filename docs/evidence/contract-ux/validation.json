@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-04",
+  "database": "isolated H2 in-memory",
+  "automatedTests": 75,
+  "failed": 0,
+  "browserWorkflows": 9,
+  "responsiveWidths": [
+    320,
+    390,
+    768,
+    1440
+  ],
+  "printPages": 2,
+  "printContainsFullTermsAndSignatures": true,
+  "pageErrors": 0
+}

@@ -1,0 +1,25 @@
+@startuml
+skinparam defaultFontName Microsoft YaHei
+skinparam monochrome true
+skinparam shadowing false
+start
+:验证学生会话与CSRF;
+if (手机号和时间格式有效?) then (是)
+ :进入数据库事务;
+ :锁定房源记录;
+ if (房源为已上架?) then (是)
+  :插入预约与唯一时段标识;
+  if (唯一约束冲突?) then (是)
+   :回滚并返回409冲突提示;
+  else (否)
+   :保存审计记录并提交;
+   :返回预约成功;
+  endif
+ else (否)
+  :拒绝预约并回滚;
+ endif
+else (否)
+ :返回400输入错误;
+endif
+stop
+@enduml

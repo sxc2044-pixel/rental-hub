@@ -1,0 +1,40 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 17
+skinparam monochrome true
+skinparam shadowing false
+actor 房东 as Owner
+actor 学生租客 as Tenant
+actor 管理员 as Admin
+rectangle 校园安居 {
+ usecase "工作台与个人中心" as Dashboard
+ usecase "发布、编辑、上下架与批量删除" as House
+ usecase "审核房源后上架" as Review
+ usecase "提交租赁申请" as Apply
+ usecase "通过或驳回申请" as Decide
+ usecase "自动生成合同" as Generate
+ usecase "双方确认签署" as Sign
+ usecase "申请与审批退租" as Move
+ usecase "开账单与登记结清" as Bill
+ usecase "报修、派工和费用责任登记" as Repair
+ usecase "文字、图片与房源卡片聊天" as Chat
+}
+Owner -- Dashboard
+Owner -- House
+Owner -- Decide
+Owner -- Sign
+Owner -- Move
+Owner -- Bill
+Owner -- Repair
+Owner -- Chat
+Tenant -- Apply
+Tenant -- Sign
+Tenant -- Move
+Tenant -- Repair
+Tenant -- Chat
+Admin -- Review
+Decide ..> Generate : <<include>>
+House ..> Review : 提交新增或修改后待审
+@enduml

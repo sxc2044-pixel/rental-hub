@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">校园安居</a> &gt; <a href="index.source.html" class="el_package">com.campus.rental</a> &gt; <span class="el_source">ReservationService.java</span></div><h1>ReservationService.java</h1><pre class="source lang-java linenums">package com.campus.rental;
+
+import static com.campus.rental.Rules.*;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/** 预约状态、并发占位和审计必须处于同一事务。 */
+@Service
+public class ReservationService {
+  private final Store db;
+
+<span class="fc" id="L15">  public ReservationService(Store db) {</span>
+<span class="fc" id="L16">    this.db = db;</span>
+<span class="fc" id="L17">  }</span>
+
+  @Transactional
+  public long create(long user, long house, LocalDateTime time, String phone) {
+<span class="fc" id="L21">    var h = db.one(&quot;SELECT id,status FROM t_house WHERE id=? FOR UPDATE&quot;, house);</span>
+<span class="fc" id="L22">    require(&quot;PUBLISHED&quot;.equals(h.get(&quot;status&quot;)), &quot;房源当前不可预约&quot;);</span>
+<span class="fc" id="L23">    long id =</span>
+<span class="fc" id="L24">        db.insert(</span>
+            &quot;INSERT INTO t_reservation(user_id,house_id,visit_time,phone,active_slot) VALUES&quot;
+                + &quot; (?,?,?,?,?)&quot;,
+<span class="fc" id="L27">            user,</span>
+<span class="fc" id="L28">            house,</span>
+            time,
+            phone,
+            house + &quot;:&quot; + time);
+<span class="fc" id="L32">    db.audit(user, &quot;RESERVE&quot;, &quot;RESERVATION&quot;, id, &quot;提交看房预约&quot;);</span>
+<span class="fc" id="L33">    return id;</span>
+  }
+
+  @Transactional
+  public void transition(long actor, long id, String target, boolean admin) {
+<span class="fc" id="L38">    Map&lt;String, Object&gt; r = db.one(&quot;SELECT * FROM t_reservation WHERE id=? FOR UPDATE&quot;, id);</span>
+<span class="fc bfc" id="L39" title="All 4 branches covered.">    require(admin || ((Number) r.get(&quot;user_id&quot;)).longValue() == actor, &quot;只能操作本人预约&quot;);</span>
+<span class="fc" id="L40">    reservationTransition(r.get(&quot;status&quot;).toString(), target, admin);</span>
+<span class="fc" id="L41">    db.update(</span>
+        &quot;UPDATE t_reservation SET status=?,active_slot=? WHERE id=?&quot;,
+        target,
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        &quot;CANCELLED&quot;.equals(target) ? null : r.get(&quot;active_slot&quot;),</span>
+<span class="fc" id="L45">        id);</span>
+<span class="fc" id="L46">    db.audit(actor, &quot;RESERVATION_&quot; + target, &quot;RESERVATION&quot;, id, &quot;更新预约状态&quot;);</span>
+<span class="fc" id="L47">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LandlordMigration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">校园安居</a> &gt; <a href="index.source.html" class="el_package">com.campus.rental</a> &gt; <span class="el_source">LandlordMigration.java</span></div><h1>LandlordMigration.java</h1><pre class="source lang-java linenums">package com.campus.rental;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+/** 增量迁移：不认领历史房源、不重置账号、不删除业务记录。 */
+@Component
+@Order(15)
+public class LandlordMigration implements CommandLineRunner {
+  private final Store db;
+
+<span class="fc" id="L13">  public LandlordMigration(Store db) {</span>
+<span class="fc" id="L14">    this.db = db;</span>
+<span class="fc" id="L15">  }</span>
+
+  public void run(String... args) throws Exception {
+<span class="fc" id="L18">    column(&quot;t_house&quot;, &quot;owner_id&quot;, &quot;BIGINT REFERENCES t_user(id)&quot;);</span>
+<span class="fc" id="L19">    column(&quot;t_user&quot;, &quot;avatar&quot;, &quot;VARCHAR(100) NOT NULL DEFAULT ''&quot;);</span>
+<span class="fc" id="L20">    column(&quot;t_contract&quot;, &quot;landlord_id&quot;, &quot;BIGINT REFERENCES t_user(id)&quot;);</span>
+<span class="fc" id="L21">    column(&quot;t_contract&quot;, &quot;tenant_signed&quot;, &quot;BOOLEAN NOT NULL DEFAULT FALSE&quot;);</span>
+<span class="fc" id="L22">    column(&quot;t_contract&quot;, &quot;landlord_signed&quot;, &quot;BOOLEAN NOT NULL DEFAULT FALSE&quot;);</span>
+<span class="fc" id="L23">  }</span>
+
+  private void column(String table, String name, String definition) throws Exception {
+<span class="fc" id="L26">    try (var c = db.dataSource().getConnection();</span>
+<span class="fc" id="L27">        var rs = c.getMetaData().getColumns(c.getCatalog(), null, table, name)) {</span>
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">      if (!rs.next()) db.update(&quot;ALTER TABLE &quot; + table + &quot; ADD COLUMN &quot; + name + &quot; &quot; + definition);</span>
+    }
+<span class="fc" id="L30">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
