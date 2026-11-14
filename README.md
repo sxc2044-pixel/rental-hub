@@ -191,7 +191,6 @@ SQL初始化不删除现有表，不负责迁移不兼容的历史结构，连�
 ```powershell
 mvn -B -ntp verify
 ```
-=======
 本次68项自动化检查通过：35项规则用例、29项Web业务用例、3项示例目录用例及1项隔离性能测试。Surefire输出到 `target/surefire-reports`，JaCoCo覆盖率输出到 `target/site/jacoco`。
 
 PerformanceTest在独立H2内存库创建10万条房源，以100个并发HTTP请求测量指定筛选查询，结果写入 `docs/evidence/performance.json`。不会污染演示库或远程数据库。该结果不包括完整浏览器加载、Kali网络、真实100人操作序列及长期可用性。
